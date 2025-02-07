@@ -1,6 +1,7 @@
 #include <Core/EntryPoint.h>
 #include <Periphery/WiFi.h>
 #include "src/Services/WiFiStation.h"
+#include "src/Services/TCPClient.h"
 
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
@@ -11,6 +12,7 @@ protected:
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
+		registerService<TCPClient>();
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

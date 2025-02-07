@@ -1,0 +1,119 @@
+#include "TCPClient.h"
+#include <Log/Log.h>
+#include <lwip/sockets.h>
+
+DEFINE_LOG(TCPClient)
+
+bool TCPClient::isConnected() const noexcept {
+    return socket != -1;
+}
+
+bool TCPClient::connect() noexcept {
+    if(socket != -1) {
+        CMF_LOG(TCPClient, Error, "Connect, but already connected");
+        return false;
+    }
+
+    socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+    if(socket == -1) {
+        CMF_LOG(TCPClient, Error, "Failed to create socket, errno=%d: %s", errno, strerror(errno));
+        return false;
+    }
+
+    timeval to{};
+    to.tv_sec = 1;
+    to.tv_usec = 0;
+    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char*) &to, sizeof(to));
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(6000);
+    inet_pton(AF_INET, "11.0.0.1", &addr.sin_addr);
+
+    if(::connect(socket, (sockaddr*) &addr, sizeof(addr)) != 0){
+        CMF_LOG(TCPClient, Error, "Failed to connect, errno=%d: %s", errno, strerror(errno));
+        return false;
+    }
+
+    OnConnect.broadcast();
+
+    return true;
+}
+
+void TCPClient::disconnect() noexcept {
+    if(socket != -1) {
+        CMF_LOG(TCPClient, Warning, "Disconnect, but not connected");
+        return;
+    }
+
+    OnDisconnect.broadcast();
+
+    close(socket);
+    socket = -1;
+}
+
+bool TCPClient::read(std::vector<uint8_t>& buffer) noexcept {
+    if(socket == -1) {
+        CMF_LOG(TCPClient, Warning, "Read, but socket not connected");
+        return false;
+    }
+
+    if(buffer.empty()) {
+        return true;
+    }
+
+    size_t total = 0;
+    while(total < buffer.size()) {
+        int now = ::read(socket, buffer.data() + total, buffer.size() - total);
+
+        if(now == 0) {
+            disconnect();
+            return false;
+        }else if(now < 0) {
+            if(errno == EAGAIN || errno == EWOULDBLOCK) {
+                vTaskDelay(1);
+                continue;
+            }else {
+                disconnect();
+                return true;
+            }
+        }
+
+        total += now;
+    }
+
+    return true;
+}
+
+bool TCPClient::write(std::vector<uint8_t>& buffer) noexcept {
+    if(socket == -1) {
+        CMF_LOG(TCPClient, Warning, "Write, but socket not connected");
+        return false;
+    }
+
+    if(buffer.empty()) {
+        return true;
+    }
+
+    size_t total = 0;
+    while(total < buffer.size()) {
+        int now = ::write(socket, buffer.data() + total, buffer.size() - total);
+
+        if(now == 0){
+            disconnect();
+            return false;
+        }else if(now < 0){
+            if(errno == EAGAIN || errno == EWOULDBLOCK){
+                vTaskDelay(1);
+                continue;
+            }else{
+                disconnect();
+                return false;
+            }
+        }
+
+        total += now;
+    }
+
+    return true;
+}
