@@ -1,4 +1,6 @@
 #include <Core/EntryPoint.h>
+#include <Periphery/WiFi.h>
+#include "src/Services/WiFiStation.h"
 
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
@@ -6,6 +8,9 @@ class TestApp : public Application {
 protected:
 	virtual void begin() noexcept override {
 		Super::begin();
+
+		registerPeriphery<WiFi>();
+		registerService<WiFiStation>();
 	}
 
 	virtual void tick(float deltaTime) noexcept override {
