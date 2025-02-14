@@ -12,6 +12,11 @@
 #include "Pins.hpp"
 #include "Services/WiFiStation.h"
 #include "Services/TCPClient.h"
+#include <Services/LED/LED.h>
+
+DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
+
+DECLARE_ENUM(RGB_LEDs);
 
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
@@ -43,6 +48,17 @@ protected:
 		registerService<WiFiStation>();
 		registerService<TCPClient>();
 		registerService<UDPEmitter>();
+
+		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
+				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEAD_L }},
+				{ LEDs::HeadlightsRight, { outputCurrAW, EXP_HEAD_R }},
+				{ LEDs::TaillightsLeft,  { outputCurrAW, EXP_TAIL_L }},
+				{ LEDs::TaillightsRight, { outputCurrAW, EXP_TAIL_R }}
+		};
+		LED<LEDs, RGB_LEDs>* ledService = registerService<LED<LEDs, RGB_LEDs>>();
+
+		ledService->reg(ledPins);
+
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

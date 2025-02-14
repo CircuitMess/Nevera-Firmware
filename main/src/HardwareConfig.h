@@ -17,10 +17,10 @@ private:
 
 	//ports are not inverted since AW9523 led driver is a current source
 	const std::vector<OutputPinDef> AW9523Outputs = {
-			{ EXP_HEAD_L, true },
-			{ EXP_HEAD_R, true },
-			{ EXP_TAIL_L, true },
-			{ EXP_TAIL_R, true }
+			{ EXP_HEAD_L, false },
+			{ EXP_HEAD_R, false },
+			{ EXP_TAIL_L, false },
+			{ EXP_TAIL_R, false }
 	};
 
 };
