@@ -4,6 +4,14 @@
 #include "src/Services/WiFiStation.h"
 #include "src/Services/TCPClient.h"
 #include "src/Services/UDPEmitter.h"
+#include <Periphery/I2C.h>
+#include <Devices/AW9523.h>
+#include <Drivers/Output/OutputCurrAW.h>
+#include <nvs_flash.h>
+#include "HardwareConfig.h"
+#include "Pins.hpp"
+#include "Services/WiFiStation.h"
+#include "Services/TCPClient.h"
 
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
@@ -18,6 +26,18 @@ protected:
 			ret = nvs_flash_init();
 		}
 		ESP_ERROR_CHECK(ret);
+
+		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
+
+		I2C* i2c = registerPeriphery<I2C>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
+
+		AW9523* aw9523 = registerDevice<AW9523>(i2c, config->getAW9523Address());
+		aw9523->setCurrentLimit(AW9523::IMAX);
+
+		OutputCurrAW* outputCurrAW = registerService<OutputCurrAW>(config->getAW9523Outputs(), aw9523);
+		for(const auto out: config->getAW9523Outputs()){
+			outputCurrAW->write(out.port, false);
+		}
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
