@@ -1,5 +1,9 @@
+#include <nvs_flash.h>
 #include <Core/EntryPoint.h>
 #include <Periphery/WiFi.h>
+#include "src/Services/WiFiStation.h"
+#include "src/Services/TCPClient.h"
+#include "src/Services/UDPEmitter.h"
 #include <Periphery/I2C.h>
 #include <Devices/AW9523.h>
 #include <Drivers/Output/OutputCurrAW.h>
@@ -38,6 +42,7 @@ protected:
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
 		registerService<TCPClient>();
+		registerService<UDPEmitter>();
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

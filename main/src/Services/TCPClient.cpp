@@ -85,7 +85,7 @@ bool TCPClient::read(std::vector<uint8_t>& buffer) noexcept {
     return true;
 }
 
-bool TCPClient::write(std::vector<uint8_t>& buffer) noexcept {
+bool TCPClient::write(const std::vector<uint8_t>& buffer) noexcept {
     if(socket == -1) {
         CMF_LOG(TCPClient, Warning, "Write, but socket not connected");
         return false;
