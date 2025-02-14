@@ -7,12 +7,14 @@
 #include <Periphery/I2C.h>
 #include <Devices/AW9523.h>
 #include <Drivers/Output/OutputCurrAW.h>
-#include <nvs_flash.h>
 #include "HardwareConfig.h"
 #include "Pins.hpp"
-#include "Services/WiFiStation.h"
-#include "Services/TCPClient.h"
+#include "FileSystem/SPIFFS.h"
+#include "Drivers/Output/OutputGPIO.h"
 #include <Services/LED/LED.h>
+#include <Services/Audio/Audio.h>
+#include <Services/Audio/AACSource.h>
+#include <Periphery/GPIOPeriph.h>
 
 DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
 
@@ -59,6 +61,19 @@ protected:
 
 		ledService->reg(ledPins);
 
+		auto gpio = registerPeriphery<GPIOPeriph>();
+		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
+		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
+
+		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
+		audio->setGain(0.5f);
+
+
+		if(!SPIFFS::init()){
+			return;
+		}
+
+		audio->play("/spiffs/Intro2.aac");
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

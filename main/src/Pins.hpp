@@ -12,8 +12,8 @@
 #define SERVO_STEER 35
 
 #define SPKR_EN 47
-#define I2S_SD 33
-#define I2S_SCK 34
+#define I2S_DATA 33
+#define I2S_BCK 34
 #define I2S_WS 48
 
 #define CAM_PIN_RESET   -1 //software reset will be performed
