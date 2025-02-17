@@ -15,6 +15,7 @@
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
+#include <Devices/Camera.h>
 
 DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
 
@@ -67,6 +68,15 @@ protected:
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.5f);
+
+		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
+			sensor->set_hmirror(sensor, 0);
+			sensor->set_vflip(sensor, 0);
+			sensor->set_gain_ctrl(sensor, 1);
+		});
+
+		camera->init();
+		camera->getFrame();
 
 
 		if(!SPIFFS::init()){
