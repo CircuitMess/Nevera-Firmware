@@ -16,6 +16,14 @@ Comm::Comm() noexcept {
     tcp->OnConnect.bind(this, &Comm::onTCPConnected);
 }
 
+void Comm::sendBattery(float percent) noexcept {
+    StrongObjectPtr<CommData> driveData = newObject<CommData>(this);
+    driveData->dataType = CommData::DataType::Battery;
+    driveData->value = percent;
+
+    sendPacket(driveData.get());
+}
+
 TickType_t Comm::getEventScanningTime() const noexcept {
     const Application* app = getApp();
     if(app == nullptr) {
@@ -64,16 +72,43 @@ void Comm::tick(float deltaTime) noexcept {
         return;
     }
 
-    StrongObjectPtr<DriveData> data = objectFromByteArray<DriveData>(buffer);
+    StrongObjectPtr<CommData> data = objectFromByteArray<CommData>(buffer, this);
     if(!data.isValid()) {
         return;
     }
 
-    if(data->dataType == DriveData::DataType::Direction) {
+    if(data->dataType == CommData::DataType::Direction) {
         OnDirectionReceived.broadcast(data->value);
-    }else if(data->dataType == DriveData::DataType::Speed) {
+    }else if(data->dataType == CommData::DataType::Speed) {
         OnSpeedReceived.broadcast(data->value);
     }
+}
+
+void Comm::sendPacket(Object *object) noexcept {
+    if(object == nullptr){
+        return;
+    }
+
+    const Application* app = getApp();
+    if(app == nullptr) {
+        return;
+    }
+
+    TCPClient* tcp = app->getService<TCPClient>();
+    if(tcp == nullptr) {
+        return;
+    }
+
+    std::vector<uint8_t> data;
+    byteArrayFromObject(object, data);
+
+    std::vector<uint8_t> sizeData(sizeof(size_t));
+    size_t size = data.size();
+
+    memcpy(sizeData.data(), &size, sizeof(size_t));
+
+    tcp->write(sizeData);
+    tcp->write(data);
 }
 
 void Comm::onTCPConnected() noexcept {

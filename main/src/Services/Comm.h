@@ -17,12 +17,16 @@ public:
 public:
     Comm() noexcept;
 
+    void sendBattery(float percent) noexcept;
+
 protected:
     virtual TickType_t getEventScanningTime() const noexcept override;
 
     virtual void tick(float deltaTime) noexcept override;
 
 private:
+    void sendPacket(Object* object) noexcept;
+
     void onTCPConnected() noexcept;
 };
 
