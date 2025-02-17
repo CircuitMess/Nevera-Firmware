@@ -19,7 +19,7 @@ WiFiStation::WiFiStation() noexcept : hysteresis({0, 20, 40, 60, 80}, 1){
     wifi->OnStationDisconnected.bind(this, &WiFiStation::onDisconnect);
 }
 
-void WiFiStation::connect() noexcept {
+void WiFiStation::connect() const noexcept {
     if(state != State::Disconnected && state != State::Connected) {
         return;
     }
@@ -97,7 +97,7 @@ WiFiStation::ConnectionStrength WiFiStation::getConnectionStrength() noexcept {
 void WiFiStation::onScanDown(uint32_t status, uint8_t number, uint8_t id) noexcept {
     if(state == State::ConnectionAbort) {
         state = State::Disconnected;
-        OnStationEvent.broadcast(EventType::Connect, "", false);
+        OnStationEvent.broadcast(EventType::Connect/*, ""*/, false);
         return;
     }
 
@@ -125,7 +125,7 @@ void WiFiStation::onScanDown(uint32_t status, uint8_t number, uint8_t id) noexce
 
         if(apRecord == nullptr) {
             state = State::Disconnected;
-            OnStationEvent.broadcast(EventType::Connect, "", false);
+            OnStationEvent.broadcast(EventType::Connect/*, ""*/, false);
             return;
         }
 
@@ -137,7 +137,7 @@ void WiFiStation::onScanDown(uint32_t status, uint8_t number, uint8_t id) noexce
 
     if(ssid.empty()) {
         state = State::Disconnected;
-        OnStationEvent.broadcast(EventType::Connect, "", false);
+        OnStationEvent.broadcast(EventType::Connect/*, ""*/, false);
         return;
     }
 
@@ -148,7 +148,7 @@ void WiFiStation::onScanDown(uint32_t status, uint8_t number, uint8_t id) noexce
     wifi->connect();
 }
 
-void WiFiStation::onConnect(const std::string& ssid, const std::string& mac, uint8_t channel, wifi_auth_mode_t authMode, uint16_t aid) noexcept {
+void WiFiStation::onConnect(/*std::string ssid, std::string mac,*/ uint8_t channel, wifi_auth_mode_t authMode, uint16_t aid) noexcept {
     const Application* app = getApp();
     if(app == nullptr) {
         return;
@@ -172,10 +172,10 @@ void WiFiStation::onConnect(const std::string& ssid, const std::string& mac, uin
         return;
     }
 
-    OnStationEvent.broadcast(EventType::Connect, mac, true);
+    OnStationEvent.broadcast(EventType::Connect/*, mac*/, true);
 }
 
-void WiFiStation::onDisconnect(const std::string& ssid, const std::string& mac, uint8_t reason, int8_t rssi) noexcept {
+void WiFiStation::onDisconnect(/*std::string ssid, std::string mac,*/ uint8_t reason, int8_t rssi) noexcept {
     const Application* app = getApp();
     if(app == nullptr) {
         return;
@@ -187,7 +187,7 @@ void WiFiStation::onDisconnect(const std::string& ssid, const std::string& mac, 
     }
 
     if(!cachedSSID.empty() && !attemptedCachedSSID && reason == WIFI_REASON_SA_QUERY_TIMEOUT) {
-        OnStationEvent.broadcast(EventType::Probe, mac, false);
+        OnStationEvent.broadcast(EventType::Probe/*, mac*/, false);
 
         state = State::Disconnected;
         connect();
@@ -199,7 +199,7 @@ void WiFiStation::onDisconnect(const std::string& ssid, const std::string& mac, 
         }else {
             state = State::Disconnected;
 
-            OnStationEvent.broadcast(EventType::Connect, mac, false);
+            OnStationEvent.broadcast(EventType::Connect/*, mac*/, false);
         }
 
         return;
@@ -207,13 +207,13 @@ void WiFiStation::onDisconnect(const std::string& ssid, const std::string& mac, 
 
     if(state == State::ConnectionAbort) {
         state = State::Disconnected;
-        OnStationEvent.broadcast(EventType::Connect, mac, false);
+        OnStationEvent.broadcast(EventType::Connect/*, mac*/, false);
         return;
     }
 
     state = State::Disconnected;
 
-    OnStationEvent.broadcast(EventType::Disconnect, mac, false);
+    OnStationEvent.broadcast(EventType::Disconnect/*, mac*/, false);
 }
 
 wifi_ap_record_t* WiFiStation::findNetwork(std::vector<wifi_ap_record_t>& networks) noexcept {

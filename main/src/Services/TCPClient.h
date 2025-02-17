@@ -21,7 +21,7 @@ public:
     void disconnect() noexcept;
 
     bool read(std::vector<uint8_t>& buffer) noexcept;
-    bool write(std::vector<uint8_t>& buffer) noexcept;
+    bool write(const std::vector<uint8_t>& buffer) noexcept;
 
 private:
     int socket = -1;

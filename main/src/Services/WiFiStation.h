@@ -32,13 +32,13 @@ public:
         High = 0
     };
 
-    DECLARE_EVENT(StationEvent, WiFiStation, EventType, std::string, bool);
+    DECLARE_EVENT(StationEvent, WiFiStation, EventType, /*std::string,*/ bool);
     StationEvent OnStationEvent{this};
 
 public:
     WiFiStation() noexcept;
 
-    void connect() noexcept;
+    void connect() const noexcept;
     void disconnect() noexcept;
 
     ConnectionStrength getConnectionStrength() noexcept;
@@ -55,8 +55,8 @@ private:
 
 private:
     void onScanDown(uint32_t status, uint8_t number, uint8_t id) noexcept;
-    void onConnect(const std::string& ssid, const std::string& mac, uint8_t channel, wifi_auth_mode_t authMode, uint16_t aid) noexcept;
-    void onDisconnect(const std::string& ssid, const std::string& mac, uint8_t reason, int8_t rssi) noexcept;
+    void onConnect(/*std::string ssid, std::string mac,*/ uint8_t channel, wifi_auth_mode_t authMode, uint16_t aid) noexcept;
+    void onDisconnect(/*std::string ssid, std::string mac,*/ uint8_t reason, int8_t rssi) noexcept;
     static wifi_ap_record_t* findNetwork(std::vector<wifi_ap_record_t>& networks) noexcept;
 };
 
