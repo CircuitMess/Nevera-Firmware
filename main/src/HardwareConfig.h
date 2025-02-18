@@ -7,6 +7,8 @@
 #include "Pins.hpp"
 #include <esp_camera.h>
 
+#include <Drivers/Input/InputTouchGPIO.h>
+
 class HardwareConfiguration : public Singleton {
 	GENERATED_BODY(HardwareConfiguration, Singleton)
 
@@ -20,6 +22,8 @@ public:
 	const std::vector<OutputPinDef>& getGPIOOutputs() const{ return GPIOOutputs; }
 
 	const camera_config_t& getCameraConfig() const{ return cameraConfig; }
+
+	const std::vector<TouchPinDef>& getTouchInputs() const{ return TouchInputs; }
 
 private:
 	const uint8_t AW9523Address = 0x5b;
@@ -87,6 +91,9 @@ private:
 			.sccb_i2c_port = 0,              /*!< If pin_sccb_sda is -1, use the already configured I2C bus by number */
 	};
 
+	inline static const std::vector<TouchPinDef> TouchInputs = {
+		{{BTN_PAIR, false}, 1000}
+	};
 };
 
 #endif //NEVERA_FIRMWARE_HARDWARECONFIG_H

@@ -16,10 +16,11 @@
 #include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
-
-DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
-
-DECLARE_ENUM(RGB_LEDs);
+#include <Drivers/Input/InputTouchGPIO.h>
+#include <Services/ButtonInput.h>
+#include "Enums.h"
+#include "States/IntroState.h"
+#include <Util/StateMachine/StateMachine.h>
 
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
@@ -37,6 +38,18 @@ protected:
 
 		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
 
+		GPIOPeriph* gpio = registerPeriphery<GPIOPeriph>();
+		InputTouchGPIO* touch = registerDriver<InputTouchGPIO>(config->getTouchInputs());
+
+		static const std::vector<std::pair<Enum<int>, InputPin>> ButtonInputs = {
+			{ Button::Pair, { touch, BTN_PAIR }}
+		};
+
+		ButtonInput* buttonInput = registerService<ButtonInput>();
+		buttonInput->reg(ButtonInputs);
+
+		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
+
 		I2C* i2c = registerPeriphery<I2C>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
 
 		AW9523* aw9523 = registerDevice<AW9523>(i2c, config->getAW9523Address());
@@ -52,6 +65,9 @@ protected:
 		registerService<TCPClient>();
 		registerService<UDPEmitter>();
 
+		StateMachine* stateMachine = registerService<StateMachine>();
+		stateMachine->setStartingStateType(IntroState::staticClass());
+
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEAD_L }},
 				{ LEDs::HeadlightsRight, { outputCurrAW, EXP_HEAD_R }},
@@ -62,8 +78,6 @@ protected:
 
 		ledService->reg(ledPins);
 
-		auto gpio = registerPeriphery<GPIOPeriph>();
-		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });

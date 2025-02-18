@@ -79,6 +79,10 @@ void WiFiStation::disconnect() noexcept {
     }
 }
 
+WiFiStation::State WiFiStation::getState() const noexcept {
+    return state;
+}
+
 WiFiStation::ConnectionStrength WiFiStation::getConnectionStrength() noexcept {
     const Application* app = getApp();
     if(app == nullptr) {
