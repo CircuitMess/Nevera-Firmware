@@ -11,6 +11,8 @@
 #include "Pins.hpp"
 #include "FileSystem/SPIFFS.h"
 #include "Drivers/Output/OutputGPIO.h"
+#include "Services/Comm.h"
+#include "Services/Feed.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
@@ -47,10 +49,6 @@ protected:
 			outputCurrAW->write(out.port, false);
 		}
 
-		registerPeriphery<WiFi>();
-		registerService<WiFiStation>();
-		registerService<TCPClient>();
-		registerService<UDPEmitter>();
 
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEAD_L }},
@@ -84,6 +82,15 @@ protected:
 		}
 
 		audio->play("/spiffs/Intro2.aac");
+
+		registerPeriphery<WiFi>();
+		registerService<WiFiStation>();
+		registerService<TCPClient>();
+		registerService<UDPEmitter>();
+		auto comm = registerService<Comm>();
+
+		//DEBUG
+		static auto feed = newObject<Feed>(camera, comm);
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

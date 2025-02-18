@@ -24,6 +24,14 @@ void Comm::sendBattery(float percent) noexcept {
     sendPacket(driveData.get());
 }
 
+void Comm::sendNoFeed(bool noFeed){
+	StrongObjectPtr<CommData> driveData = newObject<CommData>(this);
+	driveData->dataType = CommData::DataType::NoFeed;
+	driveData->value = noFeed;
+
+	sendPacket(driveData.get());
+}
+
 TickType_t Comm::getEventScanningTime() const noexcept {
     const Application* app = getApp();
     if(app == nullptr) {

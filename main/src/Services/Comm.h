@@ -19,6 +19,8 @@ public:
 
     void sendBattery(float percent) noexcept;
 
+	void sendNoFeed(bool noFeed);
+
 protected:
     virtual TickType_t getEventScanningTime() const noexcept override;
 
