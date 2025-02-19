@@ -16,6 +16,7 @@
 #include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
+#include <Services/Motors/Motors.h>
 
 DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
 
@@ -24,6 +25,7 @@ DECLARE_ENUM(RGB_LEDs);
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
 
+	Motors<int>* motors;
 protected:
 	virtual void begin() noexcept override {
 		Super::begin();
@@ -68,6 +70,13 @@ protected:
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.5f);
+
+		auto pwm = registerDriver<OutputPWM>(config->getPwmOutputs());
+
+		static const std::vector<MotorDef<int>> motorDefs = {
+				{0, {gpioOut, MOTOR_B}, {pwm, 0}}
+		};
+		motors = registerService<Motors<int>>(motorDefs, newObject<LinearEaser>().get());
 
 		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);

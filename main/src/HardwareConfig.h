@@ -6,6 +6,7 @@
 #include "Drivers/Interface/OutputDriver.h"
 #include "Pins.hpp"
 #include <esp_camera.h>
+#include <Services/Motors/Motors.h>
 
 class HardwareConfiguration : public Singleton {
 	GENERATED_BODY(HardwareConfiguration, Singleton)
@@ -20,6 +21,8 @@ public:
 	const std::vector<OutputPinDef>& getGPIOOutputs() const{ return GPIOOutputs; }
 
 	const camera_config_t& getCameraConfig() const{ return cameraConfig; }
+
+	const std::vector<OutputPWMPinDef>& getPwmOutputs() const{ return PWMOutputs; }
 
 private:
 	const uint8_t AW9523Address = 0x5b;
@@ -50,10 +53,15 @@ private:
 	};
 
 	const std::vector<OutputPinDef> GPIOOutputs = {
-			{ SPKR_EN, false }
+			{ SPKR_EN, false },
+			{ MOTOR_B, false }
 	};
 
-	camera_config_t cameraConfig = {
+	const std::vector<OutputPWMPinDef> PWMOutputs = {
+			{{ 0, false }, (gpio_num_t) MOTOR_A }
+	};
+
+	static constexpr camera_config_t cameraConfig = {
 			.pin_pwdn = CAM_PIN_PWDN,                   /*!< GPIO pin for camera power down line */
 			.pin_reset = CAM_PIN_RESET,                  /*!< GPIO pin for camera reset line */
 			.pin_xclk = CAM_PIN_XCLK,                   /*!< GPIO pin for camera XCLK line */
