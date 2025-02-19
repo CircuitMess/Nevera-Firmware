@@ -7,6 +7,7 @@
 #include "Pins.hpp"
 #include <esp_camera.h>
 #include <Services/Motors/Motors.h>
+#include <Drivers/Output/OutputMCPWM.h>
 
 class HardwareConfiguration : public Singleton {
 	GENERATED_BODY(HardwareConfiguration, Singleton)
@@ -23,6 +24,8 @@ public:
 	const camera_config_t& getCameraConfig() const{ return cameraConfig; }
 
 	const std::vector<OutputPWMPinDef>& getPwmOutputs() const{ return PWMOutputs; }
+
+	const std::vector<OutputMCPWMPinDef>& getMcpwmPinDefs() const{ return MCPWMPinDefs; }
 
 private:
 	const uint8_t AW9523Address = 0x5b;
@@ -93,6 +96,10 @@ private:
 			.grab_mode = CAMERA_GRAB_LATEST,   /*!< When buffers should be filled */
 
 			.sccb_i2c_port = 0,              /*!< If pin_sccb_sda is -1, use the already configured I2C bus by number */
+	};
+
+	const std::vector<OutputMCPWMPinDef> MCPWMPinDefs = {
+			{{ 0, false }, (gpio_num_t) SERVO_STEER, 1000000, 20000, 500, 2500 }
 	};
 
 };

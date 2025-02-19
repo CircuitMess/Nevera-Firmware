@@ -11,6 +11,7 @@
 #include "Pins.hpp"
 #include "FileSystem/SPIFFS.h"
 #include "Drivers/Output/OutputGPIO.h"
+#include "Services/Motors/Servos.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
@@ -22,10 +23,13 @@ DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRi
 
 DECLARE_ENUM(RGB_LEDs);
 
+DECLARE_ENUM(MotorsEnum, Motor);
+
+DECLARE_ENUM(ServoEnum, Steer);
+
 class TestApp : public Application {
 	GENERATED_BODY(TestApp, Application)
 
-	Motors<int>* motors;
 protected:
 	virtual void begin() noexcept override {
 		Super::begin();
@@ -76,7 +80,14 @@ protected:
 		static const std::vector<MotorDef<int>> motorDefs = {
 				{0, {gpioOut, MOTOR_B}, {pwm, 0}}
 		};
-		motors = registerService<Motors<int>>(motorDefs, newObject<LinearEaser>().get());
+		auto motors = registerService<Motors<int>>(motorDefs, newObject<LinearEaser>().get());
+
+		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
+
+		std::vector<ServoDef<ServoEnum>> servoDefs = {
+				{ ServoEnum::Steer, { mcpwm, 0 }}
+		};
+		auto servos = registerService<Servos<ServoEnum>>(servoDefs, newObject<LinearEaser>(nullptr, 1.0f).get());
 
 		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
