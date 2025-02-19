@@ -22,8 +22,11 @@
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
 
-class TestApp : public Application {
-	GENERATED_BODY(TestApp, Application)
+class Nevera : public Application {
+	GENERATED_BODY(Nevera, Application)
+
+public:
+	Nevera() noexcept : Super(100) {}
 
 protected:
 	virtual void begin() noexcept override {
@@ -65,9 +68,6 @@ protected:
 		registerService<TCPClient>();
 		registerService<UDPEmitter>();
 
-		StateMachine* stateMachine = registerService<StateMachine>();
-		stateMachine->setStartingStateType(IntroState::staticClass());
-
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEAD_L }},
 				{ LEDs::HeadlightsRight, { outputCurrAW, EXP_HEAD_R }},
@@ -92,12 +92,14 @@ protected:
 		camera->init();
 		camera->getFrame();
 
-
 		if(!SPIFFS::init()){
 			return;
 		}
 
-		audio->play("/spiffs/Intro2.aac");
+		//audio->play("/spiffs/Intro2.aac");
+
+		StateMachine* stateMachine = registerService<StateMachine>(50);
+		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 
 	virtual void tick(float deltaTime) noexcept override {
@@ -109,4 +111,4 @@ protected:
 	}
 };
 
-CMF_MAIN(TestApp)
+CMF_MAIN(Nevera)
