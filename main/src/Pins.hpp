@@ -4,6 +4,8 @@
 #define I2C_SDA 16
 #define I2C_SCL 17
 
+#define BTN_PAIR 1
+
 #define BATT_READ 2
 #define PIN_VREF 21
 
