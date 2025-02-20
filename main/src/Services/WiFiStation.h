@@ -41,6 +41,8 @@ public:
     void connect() const noexcept;
     void disconnect() noexcept;
 
+    State getState() const noexcept;
+
     ConnectionStrength getConnectionStrength() noexcept;
 
 private:

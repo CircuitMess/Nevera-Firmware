@@ -18,13 +18,17 @@
 #include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
+#include <Drivers/Input/InputTouchGPIO.h>
+#include <Services/ButtonInput.h>
+#include "Enums.h"
+#include "States/IntroState.h"
+#include <Util/StateMachine/StateMachine.h>
 
-DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
+class Nevera : public Application {
+	GENERATED_BODY(Nevera, Application)
 
-DECLARE_ENUM(RGB_LEDs);
-
-class TestApp : public Application {
-	GENERATED_BODY(TestApp, Application)
+public:
+	Nevera() noexcept : Super(100) {}
 
 protected:
 	virtual void begin() noexcept override {
@@ -38,6 +42,18 @@ protected:
 		ESP_ERROR_CHECK(ret);
 
 		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
+
+		GPIOPeriph* gpio = registerPeriphery<GPIOPeriph>();
+		InputTouchGPIO* touch = registerDriver<InputTouchGPIO>(config->getTouchInputs());
+
+		static const std::vector<std::pair<Enum<int>, InputPin>> ButtonInputs = {
+			{ Button::Pair, { touch, BTN_PAIR }}
+		};
+
+		ButtonInput* buttonInput = registerService<ButtonInput>();
+		buttonInput->reg(ButtonInputs);
+
+		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
 
 		I2C* i2c = registerPeriphery<I2C>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
 
@@ -60,8 +76,6 @@ protected:
 
 		ledService->reg(ledPins);
 
-		auto gpio = registerPeriphery<GPIOPeriph>();
-		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
@@ -76,12 +90,11 @@ protected:
 		camera->init();
 		camera->getFrame();
 
-
 		if(!SPIFFS::init()){
 			return;
 		}
 
-		audio->play("/spiffs/Intro2.aac");
+		//audio->play("/spiffs/Intro2.aac");
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
@@ -91,6 +104,9 @@ protected:
 
 		//DEBUG
 		static auto feed = newObject<Feed>(camera, comm);
+
+		StateMachine* stateMachine = registerService<StateMachine>(50);
+		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 
 	virtual void tick(float deltaTime) noexcept override {
@@ -102,4 +118,4 @@ protected:
 	}
 };
 
-CMF_MAIN(TestApp)
+CMF_MAIN(Nevera)
