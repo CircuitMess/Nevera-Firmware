@@ -3,51 +3,58 @@
 
 DEFINE_LOG(UDPEmitter)
 
-UDPEmitter::UDPEmitter() noexcept {
-    socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-    if(socket == -1) {
-        CMF_LOG(UDPEmitter, Error, "Can't create socket, errno=%d: %s", errno, strerror(errno));
-        return;
-    }
+UDPEmitter::UDPEmitter() noexcept{
+	socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+	if(socket == -1){
+		CMF_LOG(UDPEmitter, Error, "Can't create socket, errno=%d: %s", errno, strerror(errno));
+		return;
+	}
 
-    dest.sin_family = AF_INET;
-    dest.sin_port = htons(6001);
-    inet_pton(AF_INET, "11.0.0.2", &dest.sin_addr);
+	dest.sin_family = AF_INET;
+	dest.sin_port = htons(6001);
+	inet_pton(AF_INET, "11.0.0.2", &dest.sin_addr);
 }
 
-UDPEmitter::~UDPEmitter() noexcept {
-    close(socket);
+UDPEmitter::~UDPEmitter() noexcept{
+	close(socket);
 }
 
-bool UDPEmitter::write(const std::vector<uint8_t>& buffer) noexcept {
-    if(socket == -1){
-        CMF_LOG(UDPEmitter, Warning, "Write, but socket not set-up");
-        return false;
-    }
+bool UDPEmitter::write(const std::vector<uint8_t>& buffer) noexcept{
+	return write(buffer.data(), buffer.size());
+}
 
-    if(buffer.empty()) {
-        return true;
-    }
+bool UDPEmitter::write(const uint8_t* data, size_t count){
+	if(socket == -1){
+		CMF_LOG(UDPEmitter, Warning, "Write, but socket not set-up");
+		return false;
+	}
 
-    size_t total = 0;
-    while(total < buffer.size()){
-        const int now = ::sendto(socket, buffer.data() + total, buffer.size() - total, 0, reinterpret_cast<sockaddr*>(&dest), sizeof(dest));
+	if(!data || !count){
+		CMF_LOG(UDPEmitter, Warning, "Write, but data or count zero");
+		return true;
+	}
 
-        if(now == 0){
-            return false;
-        }
+	size_t total = 0;
+	while(total < count){
+		const int now = ::sendto(socket, data + total, count - total, 0, reinterpret_cast<sockaddr*>(&dest), sizeof(dest));
 
-        if(now < 0){
-            if(errno == EAGAIN || errno == EWOULDBLOCK){
-                vTaskDelay(1);
-                continue;
-            }
+		if(now == 0){
+			return false;
+		}
 
-            return false;
-        }
+		if(now < 0){
+			if(errno == EAGAIN || errno == EWOULDBLOCK){
+				vTaskDelay(1);
+				continue;
+			}
 
-        total += now;
-    }
+			CMF_LOG(UDPEmitter, Warning, "Error %d", errno);
 
-    return true;
+			return false;
+		}
+
+		total += now;
+	}
+
+	return true;
 }

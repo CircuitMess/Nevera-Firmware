@@ -4,6 +4,7 @@
 #include "PairState.h"
 
 IntroState::IntroState() noexcept {
+	printf("IntroState constructor\n");
     const Application* app = getApp();
     if(app == nullptr) {
         return;

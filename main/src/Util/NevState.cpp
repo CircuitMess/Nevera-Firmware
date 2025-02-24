@@ -5,6 +5,7 @@ const Class* NevState::transitionTo() const noexcept{
 }
 
 void NevState::transition(const Class* next) noexcept{
+	printf("State transition to %s\n", next->getName().c_str());
 	nextState = next;
 }
 

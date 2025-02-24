@@ -12,7 +12,6 @@
 #include "FileSystem/SPIFFS.h"
 #include "Drivers/Output/OutputGPIO.h"
 #include "Services/Comm.h"
-#include "Services/Feed.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
@@ -28,11 +27,13 @@ class Nevera : public Application {
 	GENERATED_BODY(Nevera, Application)
 
 public:
-	Nevera() noexcept : Super(100) {}
+	Nevera() noexcept: Super(100, 4 * 1024){}
 
 protected:
 	virtual void begin() noexcept override {
 		Super::begin();
+
+		esp_log_level_set("*", ESP_LOG_INFO);
 
 		auto ret = nvs_flash_init();
 		if(ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND){
@@ -40,6 +41,9 @@ protected:
 			ret = nvs_flash_init();
 		}
 		ESP_ERROR_CHECK(ret);
+
+		heapRep("before hw config");
+
 
 		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
 
@@ -78,8 +82,11 @@ protected:
 
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
+		heapRep("before audio");
+
+
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
-		audio->setGain(0.5f);
+		audio->setGain(0.1f);
 
 		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
@@ -94,19 +101,22 @@ protected:
 			return;
 		}
 
-		//audio->play("/spiffs/Intro2.aac");
+//		audio->play("/spiffs/Intro2.aac");
+		heapRep("before wifi");
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
 		registerService<TCPClient>();
 		registerService<UDPEmitter>();
-		auto comm = registerService<Comm>();
+		registerService<Comm>();
 
-		//DEBUG
-		static auto feed = newObject<Feed>(camera, comm);
+		heapRep("before stateMachine");
 
 		StateMachine* stateMachine = registerService<StateMachine>(50);
-		stateMachine->setStartingStateType(IntroState::staticClass());
+
+		stateMachine->setStartingStateType<IntroState>();
+		heapRep("after stateMachine");
+
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

@@ -11,21 +11,21 @@ class Feed : public AsyncEntity{
 	GENERATED_BODY(Feed, AsyncEntity)
 
 public:
-	Feed(StrongObjectPtr<Camera> camera = nullptr, StrongObjectPtr<Comm> comm = nullptr, StrongObjectPtr<UDPEmitter> udp = nullptr);
-
+	Feed(Camera* camera = nullptr, Comm* comm = nullptr, UDPEmitter* udp = nullptr);
+	~Feed() override;
 
 private:
 	void tick(float deltaTime) noexcept override;
 
 	void sendFrame(camera_fb_t* frameData);
 
-	static constexpr size_t MaxJPEGBufSize = 9 * 1024;
-	FeedFrame frame;
+	static constexpr size_t MaxJPEGBufSize = 10 * 1024;
+	uint8_t* buffer = nullptr;
 
 
-	StrongObjectPtr<Camera> camera;
-	StrongObjectPtr<Comm> comm;
-	StrongObjectPtr<UDPEmitter> udp;
+	Camera* camera;
+	Comm* comm;
+	UDPEmitter* udp;
 };
 
 
