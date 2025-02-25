@@ -2,9 +2,6 @@
 #include "Services/ButtonInput.h"
 
 DriveState::DriveState(){
-
-	printf("drivestate constr\n");
-
 	const Application* app = getApp();
 	assert(app != nullptr);
 

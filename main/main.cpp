@@ -42,9 +42,6 @@ protected:
 		}
 		ESP_ERROR_CHECK(ret);
 
-		heapRep("before hw config");
-
-
 		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
 
 		GPIOPeriph* gpio = registerPeriphery<GPIOPeriph>();
@@ -82,9 +79,6 @@ protected:
 
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
-		heapRep("before audio");
-
-
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.1f);
 
@@ -95,14 +89,12 @@ protected:
 		});
 
 		camera->init();
-		camera->getFrame();
 
 		if(!SPIFFS::init()){
 			return;
 		}
 
 //		audio->play("/spiffs/Intro2.aac");
-		heapRep("before wifi");
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
@@ -110,13 +102,9 @@ protected:
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
-		heapRep("before stateMachine");
-
 		StateMachine* stateMachine = registerService<StateMachine>(50);
 
 		stateMachine->setStartingStateType<IntroState>();
-		heapRep("after stateMachine");
-
 	}
 
 	virtual void tick(float deltaTime) noexcept override {

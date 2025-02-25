@@ -8,8 +8,6 @@
 DEFINE_LOG(Pair)
 
 PairState::PairState() noexcept {
-	printf("PairState constructor\n");
-
     const Application* app = getApp();
     if(app == nullptr) {
         return;

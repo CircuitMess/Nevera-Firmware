@@ -1,5 +1,4 @@
 #include "Feed.h"
-#include <utility>
 #include "Util/stdafx.h"
 
 DEFINE_LOG(Feed)
@@ -7,14 +6,12 @@ DEFINE_LOG(Feed)
 Feed::Feed(Camera* camera, Comm* comm, UDPEmitter* udp) :
 		AsyncEntity(50, 4 * 1024), camera(camera), comm(comm), udp(udp){
 
-	heapRep("feed constructor");
 	buffer = (uint8_t*)heap_caps_malloc(MaxJPEGBufSize, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
 
 	camera->setFormat(PIXFORMAT_JPEG);
 }
 
 Feed::~Feed(){
-	heapRep("feed destructor");
 	if(buffer){
 		free(buffer);
 		buffer = nullptr;

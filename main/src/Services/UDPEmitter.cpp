@@ -1,4 +1,5 @@
 #include "UDPEmitter.h"
+#include "CommData.h"
 #include <Log/Log.h>
 
 DEFINE_LOG(UDPEmitter)
@@ -11,8 +12,8 @@ UDPEmitter::UDPEmitter() noexcept{
 	}
 
 	dest.sin_family = AF_INET;
-	dest.sin_port = htons(6001);
-	inet_pton(AF_INET, "11.0.0.2", &dest.sin_addr);
+	dest.sin_port = htons(UDPPort);
+	inet_pton(AF_INET, ControllerIP, &dest.sin_addr);
 }
 
 UDPEmitter::~UDPEmitter() noexcept{
