@@ -102,7 +102,7 @@ protected:
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
-		StateMachine* stateMachine = registerService<StateMachine>(50);
+		StateMachine* stateMachine = registerService<StateMachine>(100);
 
 		stateMachine->setStartingStateType<IntroState>();
 	}

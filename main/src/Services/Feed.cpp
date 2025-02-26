@@ -51,12 +51,10 @@ void Feed::tick(float deltaTime) noexcept{
 }
 
 void Feed::sendFrame(camera_fb_t* frameData){
-	CMF_LOG(Feed, LogLevel::Warning, "sendFrame");
 
 	size_t size = frameData->len;
 	uint8_t* out = frameData->buf;
 
-	CMF_LOG(Feed, LogLevel::Info, "frame size (in JPEG): %d", size);
 
 	const size_t frameSize = size;
 	const size_t sendSize = frameSize + sizeof(FeedFrame::Header) + sizeof(FeedFrame::Trailer) + sizeof(size_t) * 2;
@@ -83,14 +81,7 @@ void Feed::sendFrame(camera_fb_t* frameData){
 	addData(out, size);
 	addData(FeedFrame::Trailer, sizeof(FeedFrame::Trailer));
 
-	size_t sent = 0;
-	while(sent < sendSize){
-		const size_t sending = std::min((size_t) CONFIG_TCP_MSS, sendSize - sent);
-		bool ret = udp->write(buffer + sent, sending);
-		printf("ret: %d\n", ret);
-		sent += sending;
-	}
-	printf("sent\n");
+	udp->write(buffer, sendSize);
 
 	camera->releaseFrame();
 }

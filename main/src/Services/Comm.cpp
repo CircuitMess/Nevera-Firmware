@@ -2,7 +2,7 @@
 #include <CommData.h>
 #include "TCPClient.h"
 
-Comm::Comm() noexcept {
+Comm::Comm() noexcept : AsyncEntity(10) {
     const Application* app = getApp();
     if(app == nullptr) {
         return;

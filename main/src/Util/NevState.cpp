@@ -5,6 +5,7 @@ const Class* NevState::transitionTo() const noexcept{
 }
 
 void NevState::transition(const Class* next) noexcept{
+	CMF_LOG(CMF, LogLevel::Info, "state transition to %s", next->getName().c_str());
 	nextState = next;
 }
 

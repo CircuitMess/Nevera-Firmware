@@ -26,7 +26,7 @@ bool UDPEmitter::write(const std::vector<uint8_t>& buffer) noexcept{
 
 bool UDPEmitter::write(const uint8_t* data, size_t count){
 	if(socket == -1){
-		CMF_LOG(UDPEmitter, Warning, "Write, but socket not set-up");
+		CMF_LOG(UDPEmitter, Error, "Write, but socket not set-up");
 		return false;
 	}
 
@@ -37,8 +37,8 @@ bool UDPEmitter::write(const uint8_t* data, size_t count){
 
 	size_t total = 0;
 	while(total < count){
-		const int now = ::sendto(socket, data + total, count - total, 0, reinterpret_cast<sockaddr*>(&dest), sizeof(dest));
-
+		//Use TCP MSS as an approximation for maximum datagram size
+		const int now = ::sendto(socket, data + total, std::min((size_t) CONFIG_TCP_MSS, count - total), 0, (sockaddr*) &dest, sizeof(dest));
 		if(now == 0){
 			return false;
 		}
