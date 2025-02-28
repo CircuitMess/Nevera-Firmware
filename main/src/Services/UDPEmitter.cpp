@@ -59,3 +59,36 @@ bool UDPEmitter::write(const uint8_t* data, size_t count){
 
 	return true;
 }
+
+bool UDPEmitter::write(uint8_t* buffer, size_t count) noexcept {
+    if(socket == -1){
+        CMF_LOG(UDPEmitter, Warning, "Write, but socket not set-up");
+        return false;
+    }
+
+    if(buffer == nullptr || count == 0) {
+        return true;
+    }
+
+    size_t total = 0;
+    while(total < count){
+        const int now = ::sendto(socket, buffer + total, count - total, 0, reinterpret_cast<sockaddr*>(&dest), sizeof(dest));
+
+        if(now == 0){
+            return false;
+        }
+
+        if(now < 0){
+            if(errno == EAGAIN || errno == EWOULDBLOCK){
+                vTaskDelay(1);
+                continue;
+            }
+
+            return false;
+        }
+
+        total += now;
+    }
+
+    return true;
+}

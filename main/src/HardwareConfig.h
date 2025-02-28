@@ -92,7 +92,7 @@ private:
 	};
 
 	inline static const std::vector<TouchPinDef> TouchInputs = {
-		{{BTN_PAIR, false}, 1000}
+		{{BTN_PAIR, false}, 5000}
 	};
 };
 
