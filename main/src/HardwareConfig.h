@@ -30,10 +30,22 @@ private:
 
 	//ports are not inverted since AW9523 led driver is a current source
 	const std::vector<OutputPinDef> AW9523Outputs = {
-			{ EXP_HEAD_L, false },
-			{ EXP_HEAD_R, false },
-			{ EXP_TAIL_L, false },
-			{ EXP_TAIL_R, false }
+			{ EXP_HEADLIGHT_L, false },
+			{ EXP_HEADLIGHT_R, false },
+			{ EXP_TAILLIGHT_L, false },
+			{ EXP_TAILLIGHT_R, false },
+			{ EXP_LEFT1_R,     false },
+			{ EXP_LEFT1_G,     false },
+			{ EXP_LEFT2_R,     false },
+			{ EXP_LEFT2_G,     false },
+			{ EXP_LEFT3_R,     false },
+			{ EXP_LEFT3_G,     false },
+			{ EXP_RIGHT1_R,    false },
+			{ EXP_RIGHT1_G,    false },
+			{ EXP_RIGHT2_R,    false },
+			{ EXP_RIGHT2_G,    false },
+			{ EXP_RIGHT3_R,    false },
+			{ EXP_RIGHT3_G,    false }
 	};
 
 	static constexpr i2s_std_config_t I2S_config = {
@@ -54,7 +66,8 @@ private:
 	};
 
 	const std::vector<OutputPinDef> GPIOOutputs = {
-			{ SPKR_EN, false }
+			{ SPKR_EN,  false },
+			{ PIN_VREF, false }
 	};
 
 	camera_config_t cameraConfig = {

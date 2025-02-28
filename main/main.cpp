@@ -56,7 +56,7 @@ protected:
 		I2C* i2c = registerPeriphery<I2C>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
 
 		AW9523* aw9523 = registerDevice<AW9523>(i2c, config->getAW9523Address());
-		aw9523->setCurrentLimit(AW9523::IMAX);
+		aw9523->setCurrentLimit(AW9523::IMAX_1Q);
 
 		OutputCurrAW* outputCurrAW = registerService<OutputCurrAW>(config->getAW9523Outputs(), aw9523);
 		for(const auto out: config->getAW9523Outputs()){
@@ -69,21 +69,34 @@ protected:
 		registerService<UDPEmitter>();
 
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
-				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEAD_L }},
-				{ LEDs::HeadlightsRight, { outputCurrAW, EXP_HEAD_R }},
-				{ LEDs::TaillightsLeft,  { outputCurrAW, EXP_TAIL_L }},
-				{ LEDs::TaillightsRight, { outputCurrAW, EXP_TAIL_R }}
+				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEADLIGHT_L }},
+				{ LEDs::HeadlightsRight, { outputCurrAW, EXP_HEADLIGHT_R }},
+				{ LEDs::TaillightsLeft,  { outputCurrAW, EXP_TAILLIGHT_L }},
+				{ LEDs::TaillightsRight, { outputCurrAW, EXP_TAILLIGHT_R }}
 		};
+
+		static const std::vector<std::tuple<RGB_LEDs, OutputPin, OutputPin, OutputPin>> rgbleds = {
+				{ RGB_LEDs::Left1, { outputCurrAW, EXP_LEFT1_R },  { outputCurrAW, EXP_LEFT1_G },  {}},
+				{ RGB_LEDs::Left2, { outputCurrAW, EXP_LEFT2_R },  { outputCurrAW, EXP_LEFT2_G },  {}},
+				{ RGB_LEDs::Left3, { outputCurrAW, EXP_LEFT3_R },  { outputCurrAW, EXP_LEFT3_G },  {}},
+				{ RGB_LEDs::Right1, { outputCurrAW, EXP_RIGHT1_R }, { outputCurrAW, EXP_RIGHT1_G }, {}},
+				{ RGB_LEDs::Right2, { outputCurrAW, EXP_RIGHT2_R }, { outputCurrAW, EXP_RIGHT2_G }, {}},
+				{ RGB_LEDs::Right3, { outputCurrAW, EXP_RIGHT3_R }, { outputCurrAW, EXP_RIGHT3_G }, {}},
+		};
+
 		LED<LEDs, RGB_LEDs>* ledService = registerService<LED<LEDs, RGB_LEDs>>();
 
 		ledService->reg(ledPins);
+		ledService->reg(rgbleds);
 
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.5f);
 
-		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
+		I2C* camI2C = registerPeriphery<I2C>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
+
+		auto camera = registerDevice<Camera>(config->getCameraConfig(), camI2C, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
 			sensor->set_vflip(sensor, 0);
 			sensor->set_gain_ctrl(sensor, 1);
@@ -91,6 +104,9 @@ protected:
 
 		camera->init();
 		camera->getFrame();
+
+		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
+		battery->begin();
 
 		if(!SPIFFS::init()){
 			return;

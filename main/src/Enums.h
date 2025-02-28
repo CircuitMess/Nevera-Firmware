@@ -5,6 +5,6 @@ DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRi
 
 DECLARE_ENUM(Button, Pair);
 
-DECLARE_ENUM(RGB_LEDs);
+DECLARE_ENUM(RGB_LEDs, Left1, Left2, Left3, Right1, Right2, Right3);
 
 #endif //ENUMS_H
