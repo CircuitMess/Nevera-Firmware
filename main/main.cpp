@@ -130,4 +130,4 @@ protected:
 	}
 };
 
-CMF_MAIN(TestApp)
+CMF_MAIN(Nevera)
