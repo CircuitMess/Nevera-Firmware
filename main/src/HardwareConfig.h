@@ -6,7 +6,8 @@
 #include "Drivers/Interface/OutputDriver.h"
 #include "Pins.hpp"
 #include <esp_camera.h>
-
+#include <Services/Motors/Motors.h>
+#include <Drivers/Output/OutputMCPWM.h>
 #include <Drivers/Input/InputTouchGPIO.h>
 
 class HardwareConfiguration : public Singleton {
@@ -22,6 +23,10 @@ public:
 	const std::vector<OutputPinDef>& getGPIOOutputs() const{ return GPIOOutputs; }
 
 	const camera_config_t& getCameraConfig() const{ return cameraConfig; }
+
+	const std::vector<OutputPWMPinDef>& getPwmOutputs() const{ return PWMOutputs; }
+
+	const std::vector<OutputMCPWMPinDef>& getMcpwmPinDefs() const{ return MCPWMPinDefs; }
 
 	const std::vector<TouchPinDef>& getTouchInputs() const{ return TouchInputs; }
 
@@ -66,11 +71,16 @@ private:
 	};
 
 	const std::vector<OutputPinDef> GPIOOutputs = {
-			{ SPKR_EN,  false },
+			{ SPKR_EN, false },
+			{ MOTOR_B, false },
 			{ PIN_VREF, false }
 	};
 
-	camera_config_t cameraConfig = {
+	const std::vector<OutputPWMPinDef> PWMOutputs = {
+			{{ 0, false }, (gpio_num_t) MOTOR_A }
+	};
+
+	static constexpr camera_config_t cameraConfig = {
 			.pin_pwdn = CAM_PIN_PWDN,                   /*!< GPIO pin for camera power down line */
 			.pin_reset = CAM_PIN_RESET,                  /*!< GPIO pin for camera reset line */
 			.pin_xclk = CAM_PIN_XCLK,                   /*!< GPIO pin for camera XCLK line */
@@ -102,6 +112,10 @@ private:
 			.grab_mode = CAMERA_GRAB_LATEST,   /*!< When buffers should be filled */
 
 			.sccb_i2c_port = 0,              /*!< If pin_sccb_sda is -1, use the already configured I2C bus by number */
+	};
+
+	const std::vector<OutputMCPWMPinDef> MCPWMPinDefs = {
+			{{ 0, false }, (gpio_num_t) SERVO_STEER, 1000000, 20000, 500, 2500 }
 	};
 
 	inline static const std::vector<TouchPinDef> TouchInputs = {

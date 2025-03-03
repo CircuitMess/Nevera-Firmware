@@ -11,11 +11,14 @@
 #include "Pins.hpp"
 #include "FileSystem/SPIFFS.h"
 #include "Drivers/Output/OutputGPIO.h"
+#include "Services/Comm.h"
+#include "Services/Motors/Servos.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
+#include <Services/Motors/Motors.h>
 #include <Drivers/Input/InputTouchGPIO.h>
 #include <Services/ButtonInput.h>
 #include "Enums.h"
@@ -26,7 +29,7 @@ class Nevera : public Application {
 	GENERATED_BODY(Nevera, Application)
 
 public:
-	Nevera() noexcept : Super(100) {}
+	Nevera() noexcept: Super(100, 4 * 1024){}
 
 protected:
 	virtual void begin() noexcept override {
@@ -63,10 +66,6 @@ protected:
 			outputCurrAW->write(out.port, false);
 		}
 
-		registerPeriphery<WiFi>();
-		registerService<WiFiStation>();
-		registerService<TCPClient>();
-		registerService<UDPEmitter>();
 
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEADLIGHT_L }},
@@ -92,7 +91,21 @@ protected:
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
-		audio->setGain(0.5f);
+		audio->setGain(0.1f);
+
+		auto pwm = registerDriver<OutputPWM>(config->getPwmOutputs());
+
+		static const std::vector<MotorDef<int>> motorDefs = {
+				{0, {gpioOut, MOTOR_B}, {pwm, 0}}
+		};
+		auto motors = registerService<Motors<int>>(motorDefs, newObject<LinearEaser>().get());
+
+		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
+
+		std::vector<ServoDef<ServoEnum>> servoDefs = {
+				{ ServoEnum::Steer, { mcpwm, 0 }}
+		};
+		auto servos = registerService<Servos<ServoEnum>>(servoDefs, newObject<LinearEaser>(nullptr, 1.0f).get());
 
 		I2C* camI2C = registerPeriphery<I2C>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
 
@@ -103,7 +116,6 @@ protected:
 		});
 
 		camera->init();
-		camera->getFrame();
 
 		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
 		battery->begin();
@@ -112,9 +124,16 @@ protected:
 			return;
 		}
 
-		//audio->play("/spiffs/Intro2.aac");
+//		audio->play("/spiffs/Intro2.aac");
 
-		StateMachine* stateMachine = registerService<StateMachine>(50);
+		registerPeriphery<WiFi>();
+		registerService<WiFiStation>();
+		registerService<TCPClient>();
+		registerService<UDPEmitter>();
+		registerService<Comm>();
+
+		StateMachine* stateMachine = registerService<StateMachine>(100);
+
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 

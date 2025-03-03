@@ -2,7 +2,7 @@
 #include <CommData.h>
 #include "TCPClient.h"
 
-Comm::Comm() noexcept {
+Comm::Comm() noexcept : AsyncEntity(10) {
     const Application* app = getApp();
     if(app == nullptr) {
         return;
@@ -22,6 +22,14 @@ void Comm::sendBattery(float percent) noexcept {
     driveData->value = percent;
 
     sendPacket(driveData.get());
+}
+
+void Comm::sendNoFeed(bool noFeed){
+	StrongObjectPtr<CommData> driveData = newObject<CommData>(this);
+	driveData->dataType = CommData::DataType::NoFeed;
+	driveData->value = noFeed;
+
+	sendPacket(driveData.get());
 }
 
 TickType_t Comm::getEventScanningTime() const noexcept {

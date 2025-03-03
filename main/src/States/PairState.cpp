@@ -5,6 +5,8 @@
 #include <Services/TCPClient.h>
 #include <Services/WiFiStation.h>
 
+DEFINE_LOG(Pair)
+
 PairState::PairState() noexcept {
     const Application* app = getApp();
     if(app == nullptr) {
@@ -75,6 +77,7 @@ void PairState::onButton(Enum<int> button, ButtonInput::Action action) noexcept 
 }
 
 void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexcept {
+	CMF_LOG(Pair, LogLevel::Info, "Pair event %d: %d", (int)type, success);
     const Application* app = getApp();
     if(app == nullptr) {
         return;
@@ -98,12 +101,15 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
         return;
     }
 
+	CMF_LOG(Pair, LogLevel::Info, "Wifi con event: %d", success);
     if(success) {
         if(client->isConnected()) {
             client->disconnect();
         }
 
         const bool res = client->connect();
+		CMF_LOG(Pair, LogLevel::Info, "TCP con event: %d", res);
+
         if(!res) {
             wifi->disconnect();
 
@@ -135,7 +141,7 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
             return;
         }
 
-        transition(DriveState::staticClass());
+        transition(IntroState::staticClass());
         return;
     }
 }
