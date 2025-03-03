@@ -33,8 +33,6 @@ protected:
 	virtual void begin() noexcept override {
 		Super::begin();
 
-		esp_log_level_set("*", ESP_LOG_INFO);
-
 		auto ret = nvs_flash_init();
 		if(ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND){
 			ESP_ERROR_CHECK(nvs_flash_erase());
@@ -104,7 +102,7 @@ protected:
 
 		StateMachine* stateMachine = registerService<StateMachine>(100);
 
-		stateMachine->setStartingStateType<IntroState>();
+		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 
 	virtual void tick(float deltaTime) noexcept override {
