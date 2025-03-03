@@ -53,10 +53,10 @@ private:
     int connectTries;
 
     static constexpr int ConnectRetries = 2;
-    static constexpr uint16_t ScanListSize = 24;
+    static constexpr uint16_t ScanListSize = 12;
 
 private:
-    void onScanDown(uint32_t status, uint8_t number, uint8_t id) noexcept;
+    void onScanDone(uint32_t status, uint8_t number, uint8_t id) noexcept;
     void onConnect(/*std::string ssid, std::string mac,*/ uint8_t channel, wifi_auth_mode_t authMode, uint16_t aid) noexcept;
     void onDisconnect(/*std::string ssid, std::string mac,*/ uint8_t reason, int8_t rssi) noexcept;
     static wifi_ap_record_t* findNetwork(std::vector<wifi_ap_record_t>& networks) noexcept;

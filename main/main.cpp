@@ -11,6 +11,7 @@
 #include "Pins.hpp"
 #include "FileSystem/SPIFFS.h"
 #include "Drivers/Output/OutputGPIO.h"
+#include "Services/Comm.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
@@ -26,7 +27,7 @@ class Nevera : public Application {
 	GENERATED_BODY(Nevera, Application)
 
 public:
-	Nevera() noexcept : Super(100) {}
+	Nevera() noexcept: Super(100, 4 * 1024){}
 
 protected:
 	virtual void begin() noexcept override {
@@ -63,10 +64,6 @@ protected:
 			outputCurrAW->write(out.port, false);
 		}
 
-		registerPeriphery<WiFi>();
-		registerService<WiFiStation>();
-		registerService<TCPClient>();
-		registerService<UDPEmitter>();
 
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEAD_L }},
@@ -81,7 +78,7 @@ protected:
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
-		audio->setGain(0.5f);
+		audio->setGain(0.1f);
 
 		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
@@ -90,15 +87,21 @@ protected:
 		});
 
 		camera->init();
-		camera->getFrame();
 
 		if(!SPIFFS::init()){
 			return;
 		}
 
-		//audio->play("/spiffs/Intro2.aac");
+//		audio->play("/spiffs/Intro2.aac");
 
-		StateMachine* stateMachine = registerService<StateMachine>(50);
+		registerPeriphery<WiFi>();
+		registerService<WiFiStation>();
+		registerService<TCPClient>();
+		registerService<UDPEmitter>();
+		registerService<Comm>();
+
+		StateMachine* stateMachine = registerService<StateMachine>(100);
+
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 
