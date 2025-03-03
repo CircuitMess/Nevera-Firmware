@@ -1,6 +1,8 @@
 #include "WiFiStation.h"
 #include <Periphery/WiFi.h>
 
+DEFINE_LOG(WiFIStation)
+
 WiFiStation::WiFiStation() noexcept : hysteresis({0, 20, 40, 60, 80}, 1){
     const Application* app = getApp();
     if(app == nullptr) {
@@ -14,7 +16,7 @@ WiFiStation::WiFiStation() noexcept : hysteresis({0, 20, 40, 60, 80}, 1){
 
     wifi->startStation();
 
-    wifi->OnScanDone.bind(this, &WiFiStation::onScanDown);
+    wifi->OnScanDone.bind(this, &WiFiStation::onScanDone);
     wifi->OnStationConnected.bind(this, &WiFiStation::onConnect);
     wifi->OnStationDisconnected.bind(this, &WiFiStation::onDisconnect);
 }
@@ -79,6 +81,10 @@ void WiFiStation::disconnect() noexcept {
     }
 }
 
+WiFiStation::State WiFiStation::getState() const noexcept {
+    return state;
+}
+
 WiFiStation::ConnectionStrength WiFiStation::getConnectionStrength() noexcept {
     const Application* app = getApp();
     if(app == nullptr) {
@@ -94,7 +100,7 @@ WiFiStation::ConnectionStrength WiFiStation::getConnectionStrength() noexcept {
     return static_cast<ConnectionStrength>(hysteresis.get());
 }
 
-void WiFiStation::onScanDown(uint32_t status, uint8_t number, uint8_t id) noexcept {
+void WiFiStation::onScanDone(uint32_t status, uint8_t number, uint8_t id) noexcept {
     if(state == State::ConnectionAbort) {
         state = State::Disconnected;
         OnStationEvent.broadcast(EventType::Connect/*, ""*/, false);
@@ -144,11 +150,13 @@ void WiFiStation::onScanDown(uint32_t status, uint8_t number, uint8_t id) noexce
     state = State::Connecting;
     connectTries = 0;
 
+	CMF_LOG(WiFIStation, LogLevel::Info, "Attempting connect on SSID: %s\n", ssid.c_str());
     wifi->setTargetParameters(ssid, "NeveraNevera");
     wifi->connect();
 }
 
 void WiFiStation::onConnect(/*std::string ssid, std::string mac,*/ uint8_t channel, wifi_auth_mode_t authMode, uint16_t aid) noexcept {
+	CMF_LOG(WiFIStation, LogLevel::Info, "onConnected event");
     const Application* app = getApp();
     if(app == nullptr) {
         return;
@@ -162,13 +170,16 @@ void WiFiStation::onConnect(/*std::string ssid, std::string mac,*/ uint8_t chann
     wifi->resetIPInfo();
 
     if(state == State::Connected) {
+		CMF_LOG(WiFIStation, LogLevel::Info, "early return, already connected");
         wifi->disconnect();
         return;
     }
 
     state = State::Connected;
 
-    if(!cachedSSID.empty() && !attemptedCachedSSID){
+
+    if(!cachedSSID.empty() && attemptedCachedSSID){
+		CMF_LOG(WiFIStation, LogLevel::Info, "early return, cached SSID empty");
         return;
     }
 

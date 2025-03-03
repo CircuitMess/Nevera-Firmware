@@ -12,6 +12,7 @@ public:
     virtual ~UDPEmitter() noexcept override;
 
     bool write(const std::vector<uint8_t>& buffer) noexcept;
+    bool write(const uint8_t* buffer, size_t count) noexcept;
 
 private:
     int socket = -1;

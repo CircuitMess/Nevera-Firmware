@@ -8,6 +8,7 @@
 #include <esp_camera.h>
 #include <Services/Motors/Motors.h>
 #include <Drivers/Output/OutputMCPWM.h>
+#include <Drivers/Input/InputTouchGPIO.h>
 
 class HardwareConfiguration : public Singleton {
 	GENERATED_BODY(HardwareConfiguration, Singleton)
@@ -26,6 +27,8 @@ public:
 	const std::vector<OutputPWMPinDef>& getPwmOutputs() const{ return PWMOutputs; }
 
 	const std::vector<OutputMCPWMPinDef>& getMcpwmPinDefs() const{ return MCPWMPinDefs; }
+
+	const std::vector<TouchPinDef>& getTouchInputs() const{ return TouchInputs; }
 
 private:
 	const uint8_t AW9523Address = 0x5b;
@@ -102,6 +105,9 @@ private:
 			{{ 0, false }, (gpio_num_t) SERVO_STEER, 1000000, 20000, 500, 2500 }
 	};
 
+	inline static const std::vector<TouchPinDef> TouchInputs = {
+		{{BTN_PAIR, false}, 5000}
+	};
 };
 
 #endif //NEVERA_FIRMWARE_HARDWARECONFIG_H
