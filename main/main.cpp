@@ -12,11 +12,13 @@
 #include "FileSystem/SPIFFS.h"
 #include "Drivers/Output/OutputGPIO.h"
 #include "Services/Comm.h"
+#include "Services/Motors/Servos.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
+#include <Services/Motors/Motors.h>
 #include <Drivers/Input/InputTouchGPIO.h>
 #include <Services/ButtonInput.h>
 #include "Enums.h"
@@ -79,6 +81,20 @@ protected:
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.1f);
+
+		auto pwm = registerDriver<OutputPWM>(config->getPwmOutputs());
+
+		static const std::vector<MotorDef<int>> motorDefs = {
+				{0, {gpioOut, MOTOR_B}, {pwm, 0}}
+		};
+		auto motors = registerService<Motors<int>>(motorDefs, newObject<LinearEaser>().get());
+
+		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
+
+		std::vector<ServoDef<ServoEnum>> servoDefs = {
+				{ ServoEnum::Steer, { mcpwm, 0 }}
+		};
+		auto servos = registerService<Servos<ServoEnum>>(servoDefs, newObject<LinearEaser>(nullptr, 1.0f).get());
 
 		auto camera = registerDevice<Camera>(config->getCameraConfig(), i2c, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
