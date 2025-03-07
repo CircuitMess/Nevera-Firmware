@@ -108,8 +108,6 @@ protected:
 			return;
 		}
 
-//		audio->play("/spiffs/Intro2.aac");
-
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
 		registerService<TCPClient>();

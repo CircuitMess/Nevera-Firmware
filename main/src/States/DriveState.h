@@ -9,10 +9,16 @@ class DriveState : public NevState{
 
 public:
 	DriveState();
-	// TODO listen to comm events and do appropriate stuff with them
+
+	virtual void update();
 
 private:
 	StrongObjectPtr<Feed> feed;
+
+private:
+	void onDisconnect() noexcept;
+	void onSpeedReceived(float value) noexcept;
+	void onDirectionReceived(float value) noexcept;
 };
 
 #endif //DRIVESTATE_H

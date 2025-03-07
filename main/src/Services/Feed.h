@@ -11,7 +11,7 @@ class Feed : public AsyncEntity{
 	GENERATED_BODY(Feed, AsyncEntity)
 
 public:
-	Feed(Camera* camera = nullptr, Comm* comm = nullptr, UDPEmitter* udp = nullptr);
+	Feed();
 	~Feed() override;
 
 private:
@@ -21,11 +21,6 @@ private:
 
 	static constexpr size_t MaxJPEGBufSize = 10 * 1024;
 	uint8_t* buffer = nullptr;
-
-
-	Camera* camera;
-	Comm* comm;
-	UDPEmitter* udp;
 };
 
 

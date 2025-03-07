@@ -1,6 +1,7 @@
 #ifndef NEVERA_TCPCLIENT_H
 #define NEVERA_TCPCLIENT_H
 
+#include "WiFiStation.h"
 #include <Event/EventBroadcaster.h>
 #include <Object/Object.h>
 
@@ -15,6 +16,8 @@ public:
     DisconnectEvent OnDisconnect{this};
 
 public:
+    TCPClient() noexcept;
+
     bool isConnected() const noexcept;
 
     bool connect() noexcept;
@@ -28,6 +31,9 @@ public:
 
 private:
     int socket = -1;
+
+private:
+    void onStationEvent(WiFiStation::EventType eventType, bool success) noexcept;
 };
 
 #endif //NEVERA_TCPCLIENT_H

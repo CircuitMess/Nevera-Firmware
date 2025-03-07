@@ -3,8 +3,16 @@
 
 DEFINE_LOG(Feed)
 
-Feed::Feed(Camera* camera, Comm* comm, UDPEmitter* udp) :
-		AsyncEntity(50, 4 * 1024), camera(camera), comm(comm), udp(udp){
+Feed::Feed() : Super(25, 4 * 1024){
+	Application* app = getApp();
+	if(app == nullptr) {
+		return;
+	}
+
+	Camera* camera = app->getDevice<Camera>();
+	if(camera == nullptr) {
+		return;
+	}
 
 	buffer = (uint8_t*)heap_caps_malloc(MaxJPEGBufSize, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
 
@@ -19,9 +27,20 @@ Feed::~Feed(){
 }
 
 void Feed::tick(float deltaTime) noexcept{
-	AsyncEntity::tick(deltaTime);
+	Super::tick(deltaTime);
 
-	if(camera == nullptr){
+	Application* app = getApp();
+	if(app == nullptr) {
+		return;
+	}
+
+	Camera* camera = app->getDevice<Camera>();
+	if(camera == nullptr) {
+		return;
+	}
+
+	Comm* comm = app->getService<Comm>();
+	if(comm == nullptr) {
 		return;
 	}
 
@@ -29,14 +48,14 @@ void Feed::tick(float deltaTime) noexcept{
 
 	const esp_err_t err = camera->init();
 	if(err != ESP_OK){
-		if(comm) comm->sendNoFeed(true);
+		comm->sendNoFeed(true);
 
 		vTaskDelay(1000); // No need to constantly tick if there is no feed.
 		return;
 	}else{
 		//init finally ok!
 		if(wasCamOff && camera->isInited()){
-			if(comm) comm->sendNoFeed(false);
+			comm->sendNoFeed(false);
 		}
 	}
 
@@ -51,10 +70,23 @@ void Feed::tick(float deltaTime) noexcept{
 }
 
 void Feed::sendFrame(camera_fb_t* frameData){
+	Application* app = getApp();
+	if(app == nullptr) {
+		return;
+	}
+
+	Camera* camera = app->getDevice<Camera>();
+	if(camera == nullptr) {
+		return;
+	}
+
+	UDPEmitter* udp = app->getService<UDPEmitter>();
+	if(udp == nullptr) {
+		return;
+	}
 
 	size_t size = frameData->len;
 	uint8_t* out = frameData->buf;
-
 
 	const size_t frameSize = size;
 	const size_t sendSize = frameSize + sizeof(FeedFrame::Header) + sizeof(FeedFrame::Trailer) + sizeof(size_t) * 2;

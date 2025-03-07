@@ -4,6 +4,20 @@
 
 DEFINE_LOG(TCPClient)
 
+TCPClient::TCPClient() noexcept {
+    Application* app = getApp();
+    if(app == nullptr) {
+        return;
+    }
+
+    WiFiStation* station = app->getService<WiFiStation>();
+    if(station == nullptr) {
+        return;
+    }
+
+    station->OnStationEvent.bind(this, &TCPClient::onStationEvent);
+}
+
 bool TCPClient::isConnected() const noexcept {
     return socket != -1;
 }
@@ -41,7 +55,7 @@ bool TCPClient::connect() noexcept {
 }
 
 void TCPClient::disconnect() noexcept {
-    if(socket != -1) {
+    if(socket == -1) {
         CMF_LOG(TCPClient, Warning, "Disconnect, but not connected");
         return;
     }
@@ -182,4 +196,16 @@ bool TCPClient::write(uint8_t* buffer, size_t count) noexcept {
     }
 
     return true;
+}
+
+void TCPClient::onStationEvent(WiFiStation::EventType eventType, bool success) noexcept {
+    if(socket == -1) {
+        return;
+    }
+
+    if(eventType != WiFiStation::EventType::Disconnect) {
+        return;
+    }
+
+    disconnect();
 }

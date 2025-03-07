@@ -177,11 +177,10 @@ void WiFiStation::onConnect(/*std::string ssid, std::string mac,*/ uint8_t chann
 
     state = State::Connected;
 
-
-    if(!cachedSSID.empty() && attemptedCachedSSID){
-		CMF_LOG(WiFIStation, LogLevel::Info, "early return, cached SSID empty");
+    /*if(!cachedSSID.empty() && attemptedCachedSSID){
+		TRACE_LOG("");
         return;
-    }
+    }*/
 
     OnStationEvent.broadcast(EventType::Connect/*, mac*/, true);
 }
