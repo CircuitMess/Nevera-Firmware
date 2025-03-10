@@ -29,7 +29,7 @@ class Nevera : public Application {
 	GENERATED_BODY(Nevera, Application)
 
 public:
-	Nevera() noexcept: Super(100, 4 * 1024){}
+	Nevera() noexcept: Super(1000, 4 * 1024, 8, 0){}
 
 protected:
 	virtual void begin() noexcept override {
@@ -114,7 +114,7 @@ protected:
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
-		StateMachine* stateMachine = registerService<StateMachine>(100);
+		StateMachine* stateMachine = registerService<StateMachine>(100, 4 * 1024, 8, 0);
 
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
