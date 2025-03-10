@@ -3,7 +3,7 @@
 
 DEFINE_LOG(Feed)
 
-Feed::Feed() : Super(25, 4 * 1024){
+Feed::Feed() : Super(25, 4 * 1024, 8, 0){
 	Application* app = getApp();
 	if(app == nullptr) {
 		return;
