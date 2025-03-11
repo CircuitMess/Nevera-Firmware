@@ -3,11 +3,11 @@
 
 #include <Misc/Enum.h>
 
-DECLARE_ENUM(LEDs, HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight);
+enum class LEDs{ HeadlightsLeft, HeadlightsRight, TaillightsLeft, TaillightsRight};
 
 DECLARE_ENUM(Button, Pair);
 
-DECLARE_ENUM(RGB_LEDs);
+enum class RGB_LEDs{ Left1, Left2, Left3, Right1, Right2, Right3};
 
 DECLARE_ENUM(MotorsEnum, Motor);
 
