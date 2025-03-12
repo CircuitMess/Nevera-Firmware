@@ -1,6 +1,7 @@
 #include "DriveState.h"
 #include "Enums.h"
 #include "IntroState.h"
+#include "Services/Audio/Audio.h"
 #include <Services/TCPClient.h>
 #include <Services/Motors/Motors.h>
 #include <Services/Motors/Servos.h>
@@ -36,6 +37,10 @@ void DriveState::update() {
 void DriveState::onDisconnect() noexcept {
 	if(transitionTo() != nullptr) {
 		return;
+	}
+
+	if(auto audio = getApp()->getService<Audio>()){
+		audio->play("/spiffs/Disconnect.aac");
 	}
 
 	transition(IntroState::staticClass());

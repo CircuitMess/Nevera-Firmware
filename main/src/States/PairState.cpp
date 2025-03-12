@@ -2,6 +2,7 @@
 #include <Enums.h>
 #include "DriveState.h"
 #include "IntroState.h"
+#include "Services/Audio/Audio.h"
 #include <Services/TCPClient.h>
 #include <Services/WiFiStation.h>
 
@@ -73,7 +74,13 @@ void PairState::onButton(Enum<int> button, ButtonInput::Action action) noexcept 
         return;
     }
 
-    transition(IntroState::staticClass());
+	if(auto audio = getApp()->getService<Audio>()){
+		audio->play("/spiffs/PairCancel.aac");
+	}
+
+	CMF_LOG(CMF, LogLevel::Verbose, "Pair cancel");
+
+	transition(IntroState::staticClass());
 }
 
 void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexcept {
@@ -120,10 +127,22 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
             }
 
             transition(IntroState::staticClass());
+
+			if(auto audio = getApp()->getService<Audio>()){
+				audio->play("/spiffs/PairFail.aac");
+			}
+			CMF_LOG(CMF, LogLevel::Verbose, "Pair fail");
+
+
         }else {
             if(transitionTo() != nullptr) {
                 return;
             }
+
+			if(auto audio = getApp()->getService<Audio>()){
+				audio->play("/spiffs/PairSuccess.aac");
+			}
+			CMF_LOG(CMF, LogLevel::Verbose, "Pair success");
 
             transition(DriveState::staticClass());
             return;
@@ -140,6 +159,11 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
         if(transitionTo() != nullptr) {
             return;
         }
+
+		if(auto audio = getApp()->getService<Audio>()){
+			audio->play("/spiffs/PairFail.aac");
+		}
+		CMF_LOG(CMF, LogLevel::Verbose, "Pair fail");
 
         transition(IntroState::staticClass());
         return;

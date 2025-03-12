@@ -24,6 +24,7 @@
 #include "Enums.h"
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
+#include "Services/Battery.h"
 
 class Nevera : public Application {
 	GENERATED_BODY(Nevera, Application)
@@ -124,6 +125,8 @@ protected:
 			return;
 		}
 
+		audio->play("/spiffs/Intro2.aac");
+
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
 		registerService<TCPClient>();
@@ -137,6 +140,7 @@ protected:
 
 	virtual void tick(float deltaTime) noexcept override {
 		Super::tick(deltaTime);
+		vTaskDelay(portMAX_DELAY);
 	}
 
 	virtual void onDestroy() noexcept override {

@@ -2,6 +2,7 @@
 #include "Enums.h"
 #include <Core/Application.h>
 #include "PairState.h"
+#include <Services/Audio/Audio.h>
 #include "Services/ShutdownService.h"
 
 IntroState::IntroState() noexcept {
@@ -29,7 +30,12 @@ void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept 
         return;
     }
 
-    transition(PairState::staticClass());
+	if(auto audio = getApp()->getService<Audio>()){
+		audio->play("/spiffs/PairStart.aac");
+	}
+	CMF_LOG(CMF, LogLevel::Verbose, "Pair start");
+
+	transition(PairState::staticClass());
 }
 
 void IntroState::update(){
