@@ -24,6 +24,7 @@
 #include "Enums.h"
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
+#include "Services/Battery.h"
 
 class Nevera : public Application {
 	GENERATED_BODY(Nevera, Application)
