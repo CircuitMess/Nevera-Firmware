@@ -2,6 +2,7 @@
 #include "Enums.h"
 #include <Core/Application.h>
 #include "PairState.h"
+#include "Services/ShutdownService.h"
 
 IntroState::IntroState() noexcept {
     const Application* app = getApp();
@@ -15,6 +16,8 @@ IntroState::IntroState() noexcept {
     }
 
     input->OnButtonEvent.bind(this, &IntroState::onPress);
+
+	startMillis = millis();
 }
 
 void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept {
@@ -27,4 +30,11 @@ void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept 
     }
 
     transition(PairState::staticClass());
+}
+
+void IntroState::update(){
+	if(millis() - startMillis > InactivityTimeout){
+		ShutdownService::shutdown(ShutdownReason::Inactivity);
+		vTaskDelay(portMAX_DELAY); //since shutdown is imminent
+	}
 }
