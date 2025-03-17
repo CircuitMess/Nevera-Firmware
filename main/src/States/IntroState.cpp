@@ -2,6 +2,8 @@
 #include "Enums.h"
 #include <Core/Application.h>
 #include "PairState.h"
+#include <Services/Audio/Audio.h>
+#include "Services/ShutdownService.h"
 
 IntroState::IntroState() noexcept {
     const Application* app = getApp();
@@ -15,6 +17,8 @@ IntroState::IntroState() noexcept {
     }
 
     input->OnButtonEvent.bind(this, &IntroState::onPress);
+
+	startMillis = millis();
 }
 
 void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept {
@@ -26,5 +30,17 @@ void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept 
         return;
     }
 
-    transition(PairState::staticClass());
+	if(auto audio = getApp()->getService<Audio>()){
+		audio->play("/spiffs/PairStart.aac");
+	}
+	CMF_LOG(CMF, LogLevel::Verbose, "Pair start");
+
+	transition(PairState::staticClass());
+}
+
+void IntroState::update(){
+	if(millis() - startMillis > InactivityTimeout){
+		ShutdownService::shutdown(ShutdownReason::Inactivity);
+		vTaskDelay(portMAX_DELAY); //since shutdown is imminent
+	}
 }
