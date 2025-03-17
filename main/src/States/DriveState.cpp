@@ -1,7 +1,10 @@
 #include "DriveState.h"
 #include "Enums.h"
 #include "IntroState.h"
+#include <Periphery/WiFi.h>
+#include <Services/Battery.h>
 #include <Services/TCPClient.h>
+#include <Services/Audio/Audio.h>
 #include <Services/Motors/Motors.h>
 #include <Services/Motors/Servos.h>
 
