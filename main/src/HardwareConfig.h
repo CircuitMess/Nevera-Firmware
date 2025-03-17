@@ -104,7 +104,7 @@ private:
 			.ledc_channel = LEDC_CHANNEL_0,    /*!< LEDC channel to be used for generating XCLK  */
 
 			.pixel_format = PIXFORMAT_JPEG,       /*!< Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG  */
-			.frame_size = FRAMESIZE_QQVGA,         /*!< Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA  */
+			.frame_size = FRAMESIZE_128X128,         /*!< Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA  */
 
 			.jpeg_quality = 12,               /*!< Quality of JPEG output. 0-63 lower means higher quality  */
 			.fb_count = 2,                /*!< Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)  */

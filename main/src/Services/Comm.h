@@ -1,6 +1,7 @@
 #ifndef NEVERA_COMM_H
 #define NEVERA_COMM_H
 
+#include <CommData.h>
 #include <Entity/AsyncEntity.h>
 #include <Event/EventBroadcaster.h>
 
@@ -21,15 +22,17 @@ public:
 
 	void sendNoFeed(bool noFeed);
 
-protected:
-    virtual TickType_t getEventScanningTime() const noexcept override;
+    void sendConnection(float percent) noexcept;
 
+protected:
     virtual void tick(float deltaTime) noexcept override;
 
 private:
-    void sendPacket(Object* object) noexcept;
+    StrongObjectPtr<CommData> data;
+    StrongObjectPtr<CommData> sendData;
 
-    void onTCPConnected() noexcept;
+private:
+    void sendPacket(Object* object) noexcept;
 };
 
 #endif //NEVERA_COMM_H

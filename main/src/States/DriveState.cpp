@@ -1,7 +1,6 @@
 #include "DriveState.h"
 #include "Enums.h"
 #include "IntroState.h"
-#include "Services/Audio/Audio.h"
 #include <Services/TCPClient.h>
 #include <Services/Motors/Motors.h>
 #include <Services/Motors/Servos.h>
@@ -31,7 +30,29 @@ DriveState::DriveState(){
 }
 
 void DriveState::update() {
-	// TODO send battery state to the ctrl
+	const Application* app = getApp();
+	if(app == nullptr) {
+		return;
+	}
+
+	Comm* comm = app->getService<Comm>();
+	if(comm == nullptr) {
+		return;
+	}
+
+	Battery* battery = app->getService<Battery>();
+	if(battery == nullptr) {
+		return;
+	}
+
+	comm->sendBattery(battery->getPerc() / 100.0f);
+
+	WiFi* wifi = app->getPeriphery<WiFi>();
+	if(wifi == nullptr) {
+		return;
+	}
+
+	comm->sendConnection((100.0f + wifi->getConnectionRSSI()) / 100.0f);
 }
 
 void DriveState::onDisconnect() noexcept {
@@ -71,5 +92,5 @@ void DriveState::onDirectionReceived(float value) noexcept {
 		return;
 	}
 
-	servos->set(ServoEnum::Steer, value);
+	servos->set(ServoEnum::Steer, (value + 1.0f) / 2.0f);
 }

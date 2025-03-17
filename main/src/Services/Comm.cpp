@@ -1,53 +1,30 @@
 #include "Comm.h"
-#include <CommData.h>
 #include "TCPClient.h"
 
-Comm::Comm() noexcept : Super(20, 4 * 1024, 6, -1) {
-    const Application* app = getApp();
-    if(app == nullptr) {
-        return;
-    }
-
-    TCPClient* tcp = app->getService<TCPClient>();
-    if(tcp == nullptr) {
-        return;
-    }
-
-    tcp->OnConnect.bind(this, &Comm::onTCPConnected);
+Comm::Comm() noexcept : Super(0, 4 * 1024, 10, -1) {
+    data = newObject<CommData>(this);
+    sendData = newObject<CommData>(this);
 }
 
 void Comm::sendBattery(float percent) noexcept {
-    StrongObjectPtr<CommData> driveData = newObject<CommData>(this);
-    driveData->dataType = CommData::DataType::Battery;
-    driveData->value = percent;
+    sendData->dataType = CommData::DataType::Battery;
+    sendData->value = percent;
 
-    sendPacket(driveData.get());
+    sendPacket(sendData.get());
 }
 
 void Comm::sendNoFeed(bool noFeed){
-	StrongObjectPtr<CommData> driveData = newObject<CommData>(this);
-	driveData->dataType = CommData::DataType::NoFeed;
-	driveData->value = noFeed;
+	sendData->dataType = CommData::DataType::NoFeed;
+	sendData->value = noFeed;
 
-	sendPacket(driveData.get());
+	sendPacket(sendData.get());
 }
 
-TickType_t Comm::getEventScanningTime() const noexcept {
-    const Application* app = getApp();
-    if(app == nullptr) {
-        return portMAX_DELAY;
-    }
+void Comm::sendConnection(float percent) noexcept {
+    sendData->dataType = CommData::DataType::Connection;
+    sendData->value = percent;
 
-    const TCPClient* tcp = app->getService<TCPClient>();
-    if(tcp == nullptr) {
-        return portMAX_DELAY;
-    }
-
-    if(tcp->isConnected()) {
-        return portMAX_DELAY;
-    }
-
-    return 0;
+    sendPacket(sendData.get());
 }
 
 void Comm::tick(float deltaTime) noexcept {
@@ -55,15 +32,18 @@ void Comm::tick(float deltaTime) noexcept {
 
     const Application* app = getApp();
     if(app == nullptr) {
+        vTaskDelay(100);
         return;
     }
 
     TCPClient* tcp = app->getService<TCPClient>();
     if(tcp == nullptr) {
+        vTaskDelay(100);
         return;
     }
 
     if(!tcp->isConnected()) {
+        vTaskDelay(100);
         return;
     }
 
@@ -80,14 +60,14 @@ void Comm::tick(float deltaTime) noexcept {
         return;
     }
 
-    StrongObjectPtr<CommData> data = objectFromByteArray<CommData>(buffer, this);
-    if(!data.isValid()) {
+    if(!objectFromByteArray(data.get(), buffer)) {
         return;
     }
 
     if(data->dataType == CommData::DataType::Direction) {
         OnDirectionReceived.broadcast(data->value);
     }else if(data->dataType == CommData::DataType::Speed) {
+        heapRep();
         OnSpeedReceived.broadcast(data->value);
     }
 }
@@ -117,8 +97,4 @@ void Comm::sendPacket(Object *object) noexcept {
 
     tcp->write(sizeData);
     tcp->write(data);
-}
-
-void Comm::onTCPConnected() noexcept {
-
 }

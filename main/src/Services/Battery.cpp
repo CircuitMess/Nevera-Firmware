@@ -32,7 +32,7 @@ Battery::Battery(OutputPin refSwitch) : refSwitch(refSwitch), hysteresis({ 0, 4,
 	batThread = newObject<Threaded>(this, [this](){ tick(); }, "Battery", MeasureIntverval, 3 * 1024, 5, 1);
 }
 
-uint8_t Battery::getPerc() const{
+float Battery::getPerc() const{
 	return readerBatt->getValue();
 }
 
