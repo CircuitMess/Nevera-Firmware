@@ -140,7 +140,6 @@ protected:
 
 	virtual void tick(float deltaTime) noexcept override {
 		Super::tick(deltaTime);
-		vTaskDelay(portMAX_DELAY);
 	}
 
 	virtual void onDestroy() noexcept override {
