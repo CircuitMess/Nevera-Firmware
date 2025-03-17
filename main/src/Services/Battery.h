@@ -105,7 +105,7 @@ public:
 
 	bool isShutdown() const;
 
-	uint8_t getPerc() const;
+	float getPerc() const;
 	Level getLevel() const;
 
 private:

@@ -22,6 +22,8 @@ public:
 
 	void sendNoFeed(bool noFeed);
 
+    void sendConnection(float percent) noexcept;
+
 protected:
     virtual void tick(float deltaTime) noexcept override;
 

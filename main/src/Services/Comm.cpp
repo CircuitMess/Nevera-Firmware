@@ -1,7 +1,7 @@
 #include "Comm.h"
 #include "TCPClient.h"
 
-Comm::Comm() noexcept : Super(10, 4 * 1024, 8, 0) {
+Comm::Comm() noexcept : Super(0, 4 * 1024, 10, -1) {
     data = newObject<CommData>(this);
     sendData = newObject<CommData>(this);
 }
@@ -20,22 +20,30 @@ void Comm::sendNoFeed(bool noFeed){
 	sendPacket(sendData.get());
 }
 
+void Comm::sendConnection(float percent) noexcept {
+    sendData->dataType = CommData::DataType::Connection;
+    sendData->value = percent;
+
+    sendPacket(sendData.get());
+}
+
 void Comm::tick(float deltaTime) noexcept {
     Super::tick(deltaTime);
 
-    TRACE_LOG("%f", deltaTime);
-
     const Application* app = getApp();
     if(app == nullptr) {
+        vTaskDelay(100);
         return;
     }
 
     TCPClient* tcp = app->getService<TCPClient>();
     if(tcp == nullptr) {
+        vTaskDelay(100);
         return;
     }
 
     if(!tcp->isConnected()) {
+        vTaskDelay(100);
         return;
     }
 
@@ -56,11 +64,10 @@ void Comm::tick(float deltaTime) noexcept {
         return;
     }
 
-    TRACE_LOG("%d type %f data", (int) data->dataType, data->value);
-
     if(data->dataType == CommData::DataType::Direction) {
         OnDirectionReceived.broadcast(data->value);
     }else if(data->dataType == CommData::DataType::Speed) {
+        heapRep();
         OnSpeedReceived.broadcast(data->value);
     }
 }
