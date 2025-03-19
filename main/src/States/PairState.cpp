@@ -120,8 +120,6 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
         if(!res) {
             wifi->disconnect();
 
-            // TODO fail action, LED or whatever
-
             if(transitionTo() != nullptr) {
                 return;
             }
@@ -132,8 +130,6 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
 				audio->play("/spiffs/PairFail.aac");
 			}
 			CMF_LOG(CMF, LogLevel::Verbose, "Pair fail");
-
-
         }else {
             if(transitionTo() != nullptr) {
                 return;
@@ -153,8 +149,6 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
             wifi->connect();
             return;
         }
-
-        // TODO fail action, LED or whatever
 
         if(transitionTo() != nullptr) {
             return;

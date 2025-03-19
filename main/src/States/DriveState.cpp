@@ -3,12 +3,13 @@
 #include "IntroState.h"
 #include <Periphery/WiFi.h>
 #include <Services/Battery.h>
+#include <Services/ShutdownService.h>
 #include <Services/TCPClient.h>
 #include <Services/Audio/Audio.h>
 #include <Services/Motors/Motors.h>
 #include <Services/Motors/Servos.h>
 
-DriveState::DriveState(){
+DriveState::DriveState() : lastRec(millis()){
 	const Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -33,6 +34,12 @@ DriveState::DriveState(){
 }
 
 void DriveState::update() {
+	if(millis() - lastRec >= ShutdownService::InactivityTimeout) {
+		ShutdownService::shutdown(ShutdownReason::Inactivity);
+		vTaskDelay(portMAX_DELAY);
+		return;
+	}
+
 	const Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -71,6 +78,8 @@ void DriveState::onDisconnect() noexcept {
 }
 
 void DriveState::onSpeedReceived(float value) noexcept {
+	lastRec = millis();
+
 	const Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -85,6 +94,8 @@ void DriveState::onSpeedReceived(float value) noexcept {
 }
 
 void DriveState::onDirectionReceived(float value) noexcept {
+	lastRec = millis();
+
 	const Application* app = getApp();
 	if(app == nullptr) {
 		return;

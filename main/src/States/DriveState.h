@@ -16,6 +16,9 @@ private:
 	StrongObjectPtr<Feed> feed;
 
 private:
+	uint64_t lastRec;
+
+private:
 	void onDisconnect() noexcept;
 	void onSpeedReceived(float value) noexcept;
 	void onDirectionReceived(float value) noexcept;

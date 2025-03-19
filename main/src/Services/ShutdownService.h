@@ -13,6 +13,8 @@ enum class ShutdownReason : uint8_t {
 class ShutdownService : public Object {
 	GENERATED_BODY(ShutdownService, Object)
 public:
+	static constexpr uint32_t InactivityTimeout = 2 * 60000; //[ms] = 2 mins
+
 	//Hardware shutdown, with notification audio beforehand
 	static void shutdown(ShutdownReason reason);
 };

@@ -39,7 +39,7 @@ void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept 
 }
 
 void IntroState::update(){
-	if(millis() - startMillis > InactivityTimeout){
+	if(millis() - startMillis > ShutdownService::InactivityTimeout){
 		ShutdownService::shutdown(ShutdownReason::Inactivity);
 		vTaskDelay(portMAX_DELAY); //since shutdown is imminent
 	}
