@@ -67,7 +67,6 @@ void Comm::tick(float deltaTime) noexcept {
     if(data->dataType == CommData::DataType::Direction) {
         OnDirectionReceived.broadcast(data->value);
     }else if(data->dataType == CommData::DataType::Speed) {
-        heapRep();
         OnSpeedReceived.broadcast(data->value);
     }
 }

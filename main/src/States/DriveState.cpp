@@ -81,7 +81,7 @@ void DriveState::onSpeedReceived(float value) noexcept {
 		return;
 	}
 
-	motors->set(MotorsEnum::Motor, value);
+	motors->set(MotorsEnum::Motor, value * -50.0f);
 }
 
 void DriveState::onDirectionReceived(float value) noexcept {
