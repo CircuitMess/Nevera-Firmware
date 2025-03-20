@@ -22,6 +22,7 @@
 #include <Drivers/Input/InputTouchGPIO.h>
 #include <Services/ButtonInput.h>
 #include "Enums.h"
+#include <Services/ShutdownService.h>
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
 #include "Services/Battery.h"
@@ -121,6 +122,8 @@ protected:
 		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
 		battery->begin();
 
+		battery->OnLevelChanged.bind(this, &Nevera::onBatteryChange);
+
 		if(!SPIFFS::init()){
 			return;
 		}
@@ -144,6 +147,16 @@ protected:
 
 	virtual void onDestroy() noexcept override {
 		Super::onDestroy();
+	}
+
+private:
+	void onBatteryChange(Battery::Level level) {
+		if(level != Battery::Level::Critical) {
+			return;
+		}
+
+		ShutdownService::shutdown(ShutdownReason::Battery);
+		vTaskDelay(portMAX_DELAY);
 	}
 };
 
