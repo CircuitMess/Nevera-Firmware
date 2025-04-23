@@ -105,7 +105,7 @@ protected:
 		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
 
 		std::vector<ServoDef<ServoEnum>> servoDefs = {
-				{ ServoEnum::Steer, {0.38, 0.62f}, { mcpwm, 0 }}
+				{ ServoEnum::Steer, {0.30f, 0.60f}, { mcpwm, 0 }}
 		};
 		auto servos = registerService<Servos<ServoEnum>>(servoDefs, newObject<LinearEaser>(nullptr, 1.0f).get());
 
