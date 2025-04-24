@@ -8,6 +8,7 @@
 #include <Services/Audio/Audio.h>
 #include <Services/Motors/Motors.h>
 #include <Services/Motors/Servos.h>
+#include <Services/LED/LED.h>
 
 DriveState::DriveState() : lastRec(millis()){
 	const Application* app = getApp();
@@ -31,6 +32,12 @@ DriveState::DriveState() : lastRec(millis()){
 	}
 
 	client->OnDisconnect.bind(this, &DriveState::onDisconnect);
+
+	auto ledService = getApp()->getService<LED<LEDs, RGB_LEDs>>();
+	ledService->on(LEDs::HeadlightsLeft, 1.0f);
+	ledService->on(LEDs::HeadlightsRight, 1.0f);
+	ledService->on(LEDs::TaillightsLeft, 1.0f);
+	ledService->on(LEDs::TaillightsRight, 1.0f);
 }
 
 void DriveState::update() {
@@ -73,6 +80,12 @@ void DriveState::onDisconnect() noexcept {
 	if(auto audio = getApp()->getService<Audio>()){
 		audio->play("/spiffs/Disconnect.aac");
 	}
+
+	auto ledService = getApp()->getService<LED<LEDs, RGB_LEDs>>();
+	ledService->on(LEDs::HeadlightsLeft, 1.0f);
+	ledService->on(LEDs::HeadlightsRight, 1.0f);
+	ledService->on(LEDs::TaillightsLeft, 1.0f);
+	ledService->on(LEDs::TaillightsRight, 1.0f);
 
 	transition(IntroState::staticClass());
 }
