@@ -38,6 +38,18 @@ DriveState::DriveState() : lastRec(millis()){
 	ledService->on(LEDs::HeadlightsRight, 1.0f);
 	ledService->on(LEDs::TaillightsLeft, 1.0f);
 	ledService->on(LEDs::TaillightsRight, 1.0f);
+
+
+	static constexpr float RedVal = 0.5;
+	static constexpr float OtherVal = 1.0f;
+	ledService->on(RGB_LEDs::Left1, { 0, RedVal, 0 });
+	ledService->on(RGB_LEDs::Right1, { 0, RedVal, 0 });
+
+	ledService->on(RGB_LEDs::Left2, { OtherVal, RedVal, 0 });
+	ledService->on(RGB_LEDs::Right2, { OtherVal,RedVal, 0 });
+
+	ledService->on(RGB_LEDs::Left3, { OtherVal, 0, 0 });
+	ledService->on(RGB_LEDs::Right3, { OtherVal, 0, 0 });
 }
 
 void DriveState::update() {
