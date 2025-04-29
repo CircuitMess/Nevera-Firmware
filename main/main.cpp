@@ -100,14 +100,14 @@ protected:
 		static const std::vector<MotorDef<int>> motorDefs = {
 				{0, {gpioOut, MOTOR_B}, {pwm, 0}}
 		};
-		auto motors = registerService<Motors<int>>(motorDefs, newObject<LinearEaser>().get());
+		auto motors = registerService<Motors<int>>(motorDefs);
 
 		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
 
 		std::vector<ServoDef<ServoEnum>> servoDefs = {
 				{ ServoEnum::Steer, {0.30f, 0.60f}, { mcpwm, 0 }}
 		};
-		auto servos = registerService<Servos<ServoEnum>>(servoDefs, newObject<LinearEaser>(nullptr, 1.0f).get());
+		auto servos = registerService<Servos<ServoEnum>>(servoDefs);
 
 		I2C* camI2C = registerPeriphery<I2C>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
 
@@ -136,7 +136,7 @@ protected:
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
-		StateMachine* stateMachine = registerService<StateMachine>(100, 4 * 1024, 8, 0);
+		StateMachine* stateMachine = registerService<StateMachine>(1000, 4 * 1024, 10, -1);
 
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}

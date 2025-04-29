@@ -1,4 +1,5 @@
 #include "TCPClient.h"
+#include <CommData.h>
 #include <Log/Log.h>
 #include <lwip/sockets.h>
 
@@ -41,8 +42,8 @@ bool TCPClient::connect() noexcept {
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(6000);
-    inet_pton(AF_INET, "11.0.0.1", &addr.sin_addr);
+    addr.sin_port = htons(TCPPort);
+    inet_pton(AF_INET, ControllerIP, &addr.sin_addr);
 
     if(::connect(socket, (sockaddr*) &addr, sizeof(addr)) != 0){
         CMF_LOG(TCPClient, Error, "Failed to connect, errno=%d: %s", errno, strerror(errno));
