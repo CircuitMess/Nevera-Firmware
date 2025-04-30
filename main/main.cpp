@@ -132,7 +132,9 @@ protected:
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
-		registerService<TCPClient>();
+		TCPClient* tcp = registerService<TCPClient>();
+		tcp->OnDisconnect.bind(this, &Nevera::onDisconnect);
+
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
@@ -150,13 +152,23 @@ protected:
 	}
 
 private:
-	void onBatteryChange(Battery::Level level) {
+	void onBatteryChange(Battery::Level level) const noexcept{
 		if(level != Battery::Level::Critical) {
 			return;
 		}
 
 		ShutdownService::shutdown(ShutdownReason::Battery);
 		vTaskDelay(portMAX_DELAY);
+	}
+
+	void onDisconnect() const noexcept {
+		if(Servos<ServoEnum>* servos = getService<Servos<ServoEnum>>()) {
+			servos->set(ServoEnum::Steer, 0.5f);
+		}
+
+		if(Motors<int>* motors = getService<Motors<int>>()) {
+			motors->set(0, 0.0f);
+		}
 	}
 };
 
