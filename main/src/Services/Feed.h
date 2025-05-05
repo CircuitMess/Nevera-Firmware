@@ -23,5 +23,4 @@ private:
 	uint8_t* buffer = nullptr;
 };
 
-
 #endif //NEVERA_FIRMWARE_FEED_H
