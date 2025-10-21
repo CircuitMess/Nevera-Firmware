@@ -1,7 +1,7 @@
 #include "Comm.h"
 #include "TCPClient.h"
 
-Comm::Comm() noexcept : Super(0, 4 * 1024, 10, -1) {
+Comm::Comm() noexcept : Super(12, 4 * 1024, 12, 0) {
     data = newObject<CommData>(this);
     sendData = newObject<CommData>(this);
 }
@@ -43,12 +43,14 @@ void Comm::tick(float deltaTime) noexcept {
     }
 
     if(!tcp->isConnected()) {
+        TRACE_LOG("");
         vTaskDelay(100);
         return;
     }
 
     std::vector<uint8_t> buffer(sizeof(size_t));
     if(!tcp->read(buffer)) {
+        TRACE_LOG("fail read");
         return;
     }
 
@@ -56,9 +58,14 @@ void Comm::tick(float deltaTime) noexcept {
     memcpy(&size, buffer.data(), sizeof(size_t));
 
     buffer.resize(size);
+
+    TRACE_LOG("%llu", millis());
+
     if(!tcp->read(buffer)) {
         return;
     }
+
+    TRACE_LOG("%llu", millis());
 
     if(!objectFromByteArray(data.get(), buffer)) {
         return;
@@ -66,8 +73,10 @@ void Comm::tick(float deltaTime) noexcept {
 
     if(data->dataType == CommData::DataType::Direction) {
         OnDirectionReceived.broadcast(data->value);
+        TRACE_LOG("%llu", millis());
     }else if(data->dataType == CommData::DataType::Speed) {
         OnSpeedReceived.broadcast(data->value);
+        TRACE_LOG("%llu", millis());
     }
 }
 

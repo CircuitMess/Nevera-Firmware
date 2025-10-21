@@ -22,6 +22,7 @@
 #include <Drivers/Input/InputTouchGPIO.h>
 #include <Services/ButtonInput.h>
 #include "Enums.h"
+#include <Services/Feed.h>
 #include <Services/ShutdownService.h>
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
@@ -90,6 +91,15 @@ protected:
 		ledService->reg(ledPins);
 		ledService->reg(rgbleds);
 
+		ledService->on(RGB_LEDs::Left1, { 0.0f, 1.0f, 0.0f });
+		ledService->on(RGB_LEDs::Right1, { 0.0f, 1.0f, 0.0f });
+
+		ledService->on(RGB_LEDs::Left2, { 0.0f, 1.0f, 0.0f });
+		ledService->on(RGB_LEDs::Right2, { 0.0f, 1.0f, 0.0f });
+
+		ledService->on(RGB_LEDs::Left3, { 0.0f, 1.0f, 0.0f });
+		ledService->on(RGB_LEDs::Right3, { 0.0f, 1.0f, 0.0f });
+
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
 		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
@@ -119,6 +129,8 @@ protected:
 
 		camera->init();
 
+		registerService<Feed>();
+
 		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
 		battery->begin();
 
@@ -138,7 +150,7 @@ protected:
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
-		StateMachine* stateMachine = registerService<StateMachine>(1000, 4 * 1024, 10, -1);
+		StateMachine* stateMachine = registerService<StateMachine>(100, 4 * 1024, 8, 1);
 
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}

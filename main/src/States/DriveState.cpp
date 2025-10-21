@@ -24,7 +24,12 @@ DriveState::DriveState() : lastRec(millis()){
 	comm->OnSpeedReceived.bind(this, &DriveState::onSpeedReceived);
 	comm->OnDirectionReceived.bind(this, &DriveState::onDirectionReceived);
 
-	feed = newObject<Feed>(this);
+	Feed* feed = app->getService<Feed>();
+	if(feed == nullptr){
+		return;
+	}
+
+	feed->setWorking(true);
 
 	TCPClient* client = app->getService<TCPClient>();
 	if(client == nullptr){
@@ -38,18 +43,6 @@ DriveState::DriveState() : lastRec(millis()){
 	ledService->on(LEDs::HeadlightsRight, 1.0f);
 	ledService->on(LEDs::TaillightsLeft, 1.0f);
 	ledService->on(LEDs::TaillightsRight, 1.0f);
-
-
-	static constexpr float RedVal = 0.5;
-	static constexpr float OtherVal = 1.0f;
-	ledService->on(RGB_LEDs::Left1, { 0, RedVal, 0 });
-	ledService->on(RGB_LEDs::Right1, { 0, RedVal, 0 });
-
-	ledService->on(RGB_LEDs::Left2, { OtherVal, RedVal, 0 });
-	ledService->on(RGB_LEDs::Right2, { OtherVal,RedVal, 0 });
-
-	ledService->on(RGB_LEDs::Left3, { OtherVal, 0, 0 });
-	ledService->on(RGB_LEDs::Right3, { OtherVal, 0, 0 });
 }
 
 void DriveState::update() {
@@ -84,6 +77,22 @@ void DriveState::update() {
 	comm->sendConnection((100.0f + wifi->getConnectionRSSI()) / 100.0f);
 }
 
+void DriveState::onTransitionTo(const Class* next) noexcept {
+	Super::onTransitionTo(next);
+
+	const Application* app = getApp();
+	if(app == nullptr){
+		return;
+	}
+
+	Feed* feed = app->getService<Feed>();
+	if(feed == nullptr){
+		return;
+	}
+
+	feed->setWorking(false);
+}
+
 void DriveState::onDisconnect() noexcept {
 	if(transitionTo() != nullptr) {
 		return;
@@ -103,6 +112,7 @@ void DriveState::onDisconnect() noexcept {
 }
 
 void DriveState::onSpeedReceived(float value) noexcept {
+	TRACE_LOG("%llu", millis());
 	lastRec = millis();
 
 	const Application* app = getApp();
@@ -119,6 +129,7 @@ void DriveState::onSpeedReceived(float value) noexcept {
 }
 
 void DriveState::onDirectionReceived(float value) noexcept {
+	TRACE_LOG("%llu", millis());
 	lastRec = millis();
 
 	const Application* app = getApp();
