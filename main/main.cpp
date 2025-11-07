@@ -22,6 +22,7 @@
 #include <Drivers/Input/InputTouchGPIO.h>
 #include <Services/ButtonInput.h>
 #include "Enums.h"
+#include <Services/Feed.h>
 #include <Services/ShutdownService.h>
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
@@ -255,6 +256,8 @@ protected:
 
 		camera->init();
 
+		registerService<Feed>();
+
 		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
 		battery->begin();
 
@@ -274,7 +277,7 @@ protected:
 		registerService<UDPEmitter>();
 		registerService<Comm>();
 
-		StateMachine* stateMachine = registerService<StateMachine>(1000, 4 * 1024, 10, -1);
+		StateMachine* stateMachine = registerService<StateMachine>(100, 4 * 1024, 8, 1);
 
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}

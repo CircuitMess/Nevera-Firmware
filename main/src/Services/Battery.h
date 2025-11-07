@@ -111,12 +111,12 @@ public:
 private:
 
 	static constexpr uint32_t MeasureIntverval = 100;
-	static constexpr float VoltEmpty = 3700;
+	static constexpr float VoltEmpty = 3400;
 
 	static constexpr float VoltFull = 4500;
 	static constexpr float Factor = 4.0f;
 	static constexpr float Offset = 0;
-	static constexpr float EmaA = 0.1f;
+	static constexpr float EmaA = 0.2f;
 	static constexpr int CalReads = 10;
 
 	static constexpr float CalExpected = 2500;

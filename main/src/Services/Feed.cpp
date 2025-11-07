@@ -3,7 +3,7 @@
 
 DEFINE_LOG(Feed)
 
-Feed::Feed() : Super(40, 12 * 1024, 8, -1){
+Feed::Feed() : Super(32, 12 * 1024, 7, 1){
 	Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -28,6 +28,10 @@ Feed::~Feed(){
 
 void Feed::tick(float deltaTime) noexcept{
 	Super::tick(deltaTime);
+
+	if(!working){
+		return;
+	}
 
 	Application* app = getApp();
 	if(app == nullptr) {
@@ -61,7 +65,7 @@ void Feed::tick(float deltaTime) noexcept{
 
 	camera_fb_t* frameData = camera->getFrame();
 	if(frameData == nullptr || frameData->buf == nullptr || frameData->len == 0){
-		CMF_LOG(Feed, LogLevel::Warning, "Couldnt get frame");
+		CMF_LOG(Feed, LogLevel::Error, "Couldnt get frame");
 		camera->releaseFrame();
 		return;
 	}
@@ -70,6 +74,10 @@ void Feed::tick(float deltaTime) noexcept{
 }
 
 void Feed::sendFrame(camera_fb_t* frameData){
+	if(!working){
+		return;
+	}
+
 	Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -107,6 +115,7 @@ void Feed::sendFrame(camera_fb_t* frameData){
 	for(uint8_t i = 0; i < 4; i++){
 		shiftedFrame[FeedFrame::SizeShift[i]] = ((uint8_t*) &frameSize)[i];
 	}
+
 	addData(FeedFrame::Header, sizeof(FeedFrame::Header));
 	addData(&frameSize, sizeof(size_t));
 	addData(shiftedFrame, sizeof(size_t));

@@ -10,10 +10,9 @@ class DriveState : public NevState{
 public:
 	DriveState();
 
-	virtual void update();
+	virtual void update() override;
 
-private:
-	StrongObjectPtr<Feed> feed;
+	virtual void onTransitionTo(const Class* next) noexcept override;
 
 private:
 	uint64_t lastRec;
