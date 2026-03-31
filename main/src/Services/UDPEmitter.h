@@ -3,9 +3,10 @@
 
 #include <lwip/sockets.h>
 #include <Object/Object.h>
+#include <Object/Class.h>
 
 class UDPEmitter : public Object {
-    GENERATED_BODY(UDPEmitter, Object)
+    GENERATED_BODY(UDPEmitter, Object, void)
 
 public:
     UDPEmitter() noexcept;

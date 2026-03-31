@@ -1,8 +1,10 @@
 #include "IntroState.h"
+#include <HardwareConfig.h>
 #include "Enums.h"
 #include <Core/Application.h>
 #include "PairState.h"
 #include <Services/Audio/Audio.h>
+#include <Services/Audio/FileAudioSource.h>
 #include "Services/ShutdownService.h"
 
 IntroState::IntroState() noexcept {
@@ -30,9 +32,20 @@ void IntroState::onPress(Enum<int> button, ButtonInput::Action action) noexcept 
         return;
     }
 
-	if(auto audio = getApp()->getService<Audio>()){
-		audio->play("/spiffs/PairStart.aac");
+	Application* app = getApp();
+	if(app == nullptr){
+		return;
 	}
+
+	HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+	if(config == nullptr){
+		return;
+	}
+
+	if(Audio* audio = app->getService<Audio>()){
+		audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/PairStart.aac"));
+	}
+
 	CMF_LOG(CMF, LogLevel::Verbose, "Pair start");
 
 	transition(PairState::staticClass());

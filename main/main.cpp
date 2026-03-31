@@ -4,7 +4,7 @@
 #include "src/Services/WiFiStation.h"
 #include "src/Services/TCPClient.h"
 #include "src/Services/UDPEmitter.h"
-#include <Periphery/I2C.h>
+#include <Periphery/I2CMaster.h>
 #include <Devices/AW9523.h>
 #include <Drivers/Output/OutputCurrAW.h>
 #include "HardwareConfig.h"
@@ -15,7 +15,6 @@
 #include "Services/Motors/Servos.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
-#include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
 #include <Services/Motors/Motors.h>
@@ -24,147 +23,22 @@
 #include "Enums.h"
 #include <Services/Feed.h>
 #include <Services/ShutdownService.h>
+#include <Services/Audio/FileAudioSource.h>
+#include <Util/stdafx.h>
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
 #include "Services/Battery.h"
-
-#include <iostream>
-#include "src/lib/sprofiler/sprofiler.h"
-
-#include <Services/Modules/ModuleService.h>
-
-#define NUM_OF_SPIN_TASKS   6
-#define SPIN_ITER           500000  //Actual CPU cycles used will depend on compiler optimization
-#define SPIN_TASK_PRIO      2
-#define STATS_TASK_PRIO     3
-#define STATS_TICKS         pdMS_TO_TICKS(1000)
-#define ARRAY_SIZE_OFFSET   5   //Increase this if print_real_time_stats returns ESP_ERR_INVALID_SIZE
-
-static esp_err_t print_real_time_stats(TickType_t xTicksToWait)
-{
-    TaskStatus_t *start_array = NULL, *end_array = NULL;
-    UBaseType_t start_array_size, end_array_size;
-    uint32_t start_run_time, end_run_time;
-    esp_err_t ret;
-
-    //Allocate array to store current task states
-    start_array_size = uxTaskGetNumberOfTasks() + ARRAY_SIZE_OFFSET;
-    start_array = static_cast<TaskStatus_t *>(malloc(sizeof(TaskStatus_t) * start_array_size));
-    if (start_array == NULL) {
-    	std::cout << "start_array is nullptr" << std::endl;
-        ret = ESP_ERR_NO_MEM;
-    	free(start_array);
-    	free(end_array);
-    	return ret;
-    }
-    //Get current task states
-    start_array_size = uxTaskGetSystemState(start_array, start_array_size, &start_run_time);
-    if (start_array_size == 0) {
-    	std::cout << "start_array_size is 0" << std::endl;
-        ret = ESP_ERR_INVALID_SIZE;
-    	free(start_array);
-    	free(end_array);
-    	return ret;
-    }
-
-    vTaskDelay(xTicksToWait);
-
-    //Allocate array to store tasks states post delay
-    end_array_size = uxTaskGetNumberOfTasks() + ARRAY_SIZE_OFFSET;
-    end_array = static_cast<TaskStatus_t *>(malloc(sizeof(TaskStatus_t) * end_array_size));
-    if (end_array == NULL) {
-    	std::cout << "end_array is nullptr" << std::endl;
-        ret = ESP_ERR_NO_MEM;
-    	free(start_array);
-    	free(end_array);
-    	return ret;
-    }
-    //Get post delay task states
-    end_array_size = uxTaskGetSystemState(end_array, end_array_size, &end_run_time);
-    if (end_array_size == 0) {
-    	std::cout << "end_array_size is 0" << std::endl;
-        ret = ESP_ERR_INVALID_SIZE;
-    	free(start_array);
-    	free(end_array);
-    	return ret;
-    }
-
-    //Calculate total_elapsed_time in units of run time stats clock period.
-    uint32_t total_elapsed_time = (end_run_time - start_run_time);
-    if (total_elapsed_time == 0) {
-    	std::cout << "total_elapsed_time is 0" << std::endl;
-        ret = ESP_ERR_INVALID_STATE;
-    	free(start_array);
-    	free(end_array);
-    	return ret;
-    }
-
-    std::cout << "| Task | Run Time | Percentage\n" << std::endl;
-    //Match each task in start_array to those in the end_array
-    for (int i = 0; i < start_array_size; i++) {
-        int k = -1;
-        for (int j = 0; j < end_array_size; j++) {
-            if (start_array[i].xHandle == end_array[j].xHandle) {
-                k = j;
-                //Mark that task have been matched by overwriting their handles
-                start_array[i].xHandle = NULL;
-                end_array[j].xHandle = NULL;
-                break;
-            }
-        }
-        //Check if matching task found
-        if (k >= 0) {
-            uint32_t task_elapsed_time = end_array[k].ulRunTimeCounter - start_array[i].ulRunTimeCounter;
-            uint32_t percentage_time = (task_elapsed_time * 100UL) / (total_elapsed_time * portNUM_PROCESSORS);
-        	std::cout << "| " << start_array[i].pcTaskName << " | " << task_elapsed_time << " | " << percentage_time << "%" << std::endl;
-        }
-    }
-
-    //Print unmatched tasks
-    for (int i = 0; i < start_array_size; i++) {
-        if (start_array[i].xHandle != NULL) {
-        	std::cout << "| " << start_array[i].pcTaskName << " | Deleted" << std::endl;
-        }
-    }
-    for (int i = 0; i < end_array_size; i++) {
-        if (end_array[i].xHandle != NULL) {
-        	std::cout << "| " << end_array[i].pcTaskName << " | Created" << std::endl;
-        }
-    }
-    ret = ESP_OK;
-
-	free(start_array);
-	free(end_array);
-	return ret;
-}
-
-static void stats_task(void *arg)
-{
-	//Print real time stats periodically
-	while (true) {
-		if(print_real_time_stats(STATS_TICKS) == ESP_OK){
-			printf("Real time stats obtained\n");
-		}else{
-			printf("Error getting real time stats\n");
-		}
-
-		vTaskDelay(pdMS_TO_TICKS(1000));
-	}
-}
+#include "Util/EfuseMeta.h"
+#include "JigHWTest/JigHWTest.h"
 
 class Nevera : public Application {
-	GENERATED_BODY(Nevera, Application)
+	GENERATED_BODY(Nevera, Application, void)
 
 public:
 	Nevera() noexcept: Super(1000, 4 * 1024, 8, 0){}
 
 protected:
 	virtual void begin() noexcept override {
-		Super::begin();
-
-		//sprofiler_initialize(100);
-		//xTaskCreatePinnedToCore(stats_task, "stats", 4096, NULL, STATS_TASK_PRIO, NULL, tskNO_AFFINITY);
-
 		auto ret = nvs_flash_init();
 		if(ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND){
 			ESP_ERROR_CHECK(nvs_flash_erase());
@@ -173,8 +47,24 @@ protected:
 		ESP_ERROR_CHECK(ret);
 
 		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
-
 		GPIOPeriph* gpio = registerPeriphery<GPIOPeriph>();
+
+		if(JigHWTest::checkJig()){
+			printf("Jig\n");
+			StrongObjectPtr<JigHWTest> test = newObject<JigHWTest>();
+			test->start();
+			vTaskDelete(nullptr);
+		}else{
+			printf("Hello\n");
+		}
+
+		if(!EfuseMeta::check()){
+			while(true){
+				vTaskDelay(1000);
+				EfuseMeta::log();
+			}
+		}
+
 		InputTouchGPIO* touch = registerDriver<InputTouchGPIO>(config->getTouchInputs());
 
 		static const std::vector<std::pair<Enum<int>, InputPin>> ButtonInputs = {
@@ -186,16 +76,15 @@ protected:
 
 		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
 
-		I2C* i2c = registerPeriphery<I2C>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
+		I2CMaster* i2cMaster = registerPeriphery<I2CMaster>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
 
-		AW9523* aw9523 = registerDevice<AW9523>(i2c, config->getAW9523Address());
+		AW9523* aw9523 = registerDevice<AW9523>(i2cMaster, config->getAW9523Address());
 		aw9523->setCurrentLimit(AW9523::IMAX_1Q);
 
 		OutputCurrAW* outputCurrAW = registerService<OutputCurrAW>(config->getAW9523Outputs(), aw9523);
 		for(const auto out: config->getAW9523Outputs()){
 			outputCurrAW->write(out.port, false);
 		}
-
 
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEADLIGHT_L }},
@@ -229,7 +118,7 @@ protected:
 
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
-		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
+		auto audio = registerService<Audio>(i2s, OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.1f);
 
 		auto pwm = registerDriver<OutputPWM>(config->getPwmOutputs());
@@ -242,13 +131,13 @@ protected:
 		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
 
 		std::vector<ServoDef<ServoEnum>> servoDefs = {
-				{ ServoEnum::Steer, {0.30f, 0.60f}, { mcpwm, 0 }}
+				{ ServoEnum::Steer, {0.30f, 0.55f}, { mcpwm, 0 }}
 		};
 		auto servos = registerService<Servos<ServoEnum>>(servoDefs);
 
-		I2C* camI2C = registerPeriphery<I2C>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
+		I2CMaster* camI2CMaster = registerPeriphery<I2CMaster>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
 
-		auto camera = registerDevice<Camera>(config->getCameraConfig(), camI2C, [](sensor_t* sensor){
+		auto camera = registerDevice<Camera>(config->getCameraConfig(), camI2CMaster, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
 			sensor->set_vflip(sensor, 0);
 			sensor->set_gain_ctrl(sensor, 1);
@@ -267,7 +156,7 @@ protected:
 			return;
 		}
 
-		audio->play("/spiffs/Intro2.aac");
+		audio->play(config->getAACAudioGenerator(), std::make_unique<FileAudioSource>("/spiffs/Intro2.aac"));
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
@@ -282,13 +171,6 @@ protected:
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 
-	virtual void tick(float deltaTime) noexcept override {
-		Super::tick(deltaTime);
-	}
-
-	virtual void onDestroy() noexcept override {
-		Super::onDestroy();
-	}
 
 private:
 	void onBatteryChange(Battery::Level level) const noexcept{

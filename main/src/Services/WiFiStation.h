@@ -7,7 +7,7 @@
 #include "../Util/Hysteresis.h"
 
 class WiFiStation : public Object {
-    GENERATED_BODY(WiFiStation, Object)
+    GENERATED_BODY(WiFiStation, Object, void)
 
 public:
     enum class State : uint8_t {

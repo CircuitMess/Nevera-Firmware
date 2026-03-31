@@ -1,22 +1,38 @@
 #include "ShutdownService.h"
+#include <HardwareConfig.h>
+
 #include "Services/Audio/Audio.h"
 #include "Enums.h"
 #include "Pins.hpp"
 #include "Drivers/Output/OutputGPIO.h"
+
+#include <Services/Audio/FileAudioSource.h>
 #include <Services/Motors/Motors.h>
 #include <Services/LED/LED.h>
+#include <Util/stdafx.h>
 
 void ShutdownService::shutdown(ShutdownReason reason){
-	auto app = getApp();
+	const Application* app = getApp();
+	if(app == nullptr){
+		return;
+	}
 
-	auto audio = app->getService<Audio>();
+	Audio* audio = app->getService<Audio>();
+	if(audio == nullptr){
+		return;
+	}
+
+	HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+	if(config == nullptr){
+		return;
+	}
 
 	switch(reason){
 		case ShutdownReason::Inactivity:
-			audio->play("/spiffs/Gasenje.aac");
+			audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/Gasenje.aac"));
 			break;
 		case ShutdownReason::Battery:
-			audio->play("/spiffs/GasenjeBatt.aac");
+			audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/GasenjeBatt.aac"));
 			break;
 		default:
 			break;

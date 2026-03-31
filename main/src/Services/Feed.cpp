@@ -1,9 +1,10 @@
 #include "Feed.h"
 #include "Util/stdafx.h"
+#include "img_converters.h"
 
 DEFINE_LOG(Feed)
 
-Feed::Feed() : Super(32, 12 * 1024, 7, 1){
+Feed::Feed() : Super(45, 12 * 1024, 7, 1){
 	Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -15,8 +16,6 @@ Feed::Feed() : Super(32, 12 * 1024, 7, 1){
 	}
 
 	buffer = (uint8_t*)heap_caps_malloc(MaxJPEGBufSize, MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
-
-	camera->setFormat(PIXFORMAT_JPEG);
 }
 
 Feed::~Feed(){
@@ -26,7 +25,7 @@ Feed::~Feed(){
 	}
 }
 
-void Feed::tick(float deltaTime) noexcept{
+void Feed::tick(float deltaTime) noexcept {
 	Super::tick(deltaTime);
 
 	if(!working){
@@ -78,6 +77,10 @@ void Feed::sendFrame(camera_fb_t* frameData){
 		return;
 	}
 
+	if(frameData == nullptr){
+		return;
+	}
+
 	Application* app = getApp();
 	if(app == nullptr) {
 		return;
@@ -90,14 +93,26 @@ void Feed::sendFrame(camera_fb_t* frameData){
 
 	UDPEmitter* udp = app->getService<UDPEmitter>();
 	if(udp == nullptr) {
+		CMF_LOG(Feed, LogLevel::Warning, "UDPEmitter is invalid.");
+		camera->releaseFrame();
 		return;
 	}
 
-	size_t size = frameData->len;
-	uint8_t* out = frameData->buf;
+	size_t size = 0;
+	uint8_t* out;
+
+	frame2jpg(frameData, 15, &out, &size);
+
+	if(out == nullptr){
+		CMF_LOG(Feed, LogLevel::Warning, "Out buffer from frame2jpg is nullptr.");
+		camera->releaseFrame();
+		return;
+	}
 
 	const size_t frameSize = size;
 	const size_t sendSize = frameSize + sizeof(FeedFrame::Header) + sizeof(FeedFrame::Trailer) + sizeof(size_t) * 2;
+
+	//TRACE_LOG("%zu", sendSize);
 
 	if(sendSize > MaxJPEGBufSize){
 		CMF_LOG(Feed, LogLevel::Warning, "Data frame buffer larger than send buffer. %zu > %zu\n", sendSize, MaxJPEGBufSize);
@@ -124,5 +139,6 @@ void Feed::sendFrame(camera_fb_t* frameData){
 
 	udp->write(buffer, sendSize);
 
+	free(out);
 	camera->releaseFrame();
 }

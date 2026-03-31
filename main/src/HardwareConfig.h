@@ -9,11 +9,16 @@
 #include <Services/Motors/Motors.h>
 #include <Drivers/Output/OutputMCPWM.h>
 #include <Drivers/Input/InputTouchGPIO.h>
+#include <Services/Audio/AACAudioGenerator.h>
 
 class HardwareConfiguration : public Singleton {
-	GENERATED_BODY(HardwareConfiguration, Singleton)
+	GENERATED_BODY(HardwareConfiguration, Singleton, void)
 
 public:
+	virtual ~HardwareConfiguration() noexcept override{ delete _AACAudioGenerator; }
+
+	AACAudioGenerator* getAACAudioGenerator() const noexcept{ return _AACAudioGenerator; }
+
 	uint8_t getAW9523Address() const noexcept{ return AW9523Address; }
 
 	const std::vector<OutputPinDef>& getAW9523Outputs() const noexcept{ return AW9523Outputs; }
@@ -31,6 +36,8 @@ public:
 	const std::vector<TouchPinDef>& getTouchInputs() const{ return TouchInputs; }
 
 private:
+	AACAudioGenerator* _AACAudioGenerator = new ::AACAudioGenerator();
+
 	const uint8_t AW9523Address = 0x5b;
 
 	//ports are not inverted since AW9523 led driver is a current source
@@ -103,7 +110,7 @@ private:
 			.ledc_timer = LEDC_TIMER_0,        /*!< LEDC timer to be used for generating XCLK  */
 			.ledc_channel = LEDC_CHANNEL_0,    /*!< LEDC channel to be used for generating XCLK  */
 
-			.pixel_format = PIXFORMAT_JPEG,       /*!< Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG  */
+			.pixel_format = PIXFORMAT_RGB565,       /*!< Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG  */
 			.frame_size = FRAMESIZE_128X128,         /*!< Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA  */
 
 			.jpeg_quality = 12,               /*!< Quality of JPEG output. 0-63 lower means higher quality  */
