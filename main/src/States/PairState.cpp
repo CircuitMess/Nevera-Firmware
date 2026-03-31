@@ -1,10 +1,12 @@
 #include "PairState.h"
 #include <Enums.h>
+#include <HardwareConfig.h>
 #include "DriveState.h"
 #include "IntroState.h"
 #include "Services/Audio/Audio.h"
 #include <Services/TCPClient.h>
 #include <Services/WiFiStation.h>
+#include <Services/Audio/FileAudioSource.h>
 
 DEFINE_LOG(Pair)
 
@@ -74,9 +76,19 @@ void PairState::onButton(Enum<int> button, ButtonInput::Action action) noexcept 
         return;
     }
 
-	if(auto audio = getApp()->getService<Audio>()){
-		audio->play("/spiffs/PairCancel.aac");
-	}
+    Application* app = getApp();
+    if(app == nullptr){
+        return;
+    }
+
+    HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+    if(config == nullptr){
+        return;
+    }
+
+    if(Audio* audio = app->getService<Audio>()){
+        audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/PairCancel.aac"));
+    }
 
 	CMF_LOG(CMF, LogLevel::Verbose, "Pair cancel");
 
@@ -126,18 +138,30 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
 
             transition(IntroState::staticClass());
 
-			if(auto audio = getApp()->getService<Audio>()){
-				audio->play("/spiffs/PairFail.aac");
-			}
+            HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+            if(config == nullptr){
+                return;
+            }
+
+            if(Audio* audio = app->getService<Audio>()){
+                audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/PairFail.aac"));
+            }
+
 			CMF_LOG(CMF, LogLevel::Verbose, "Pair fail");
         }else {
             if(transitionTo() != nullptr) {
                 return;
             }
 
-			if(auto audio = getApp()->getService<Audio>()){
-				audio->play("/spiffs/PairSuccess.aac");
-			}
+            HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+            if(config == nullptr){
+                return;
+            }
+
+            if(Audio* audio = app->getService<Audio>()){
+                audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/PairSuccess.aac"));
+            }
+
 			CMF_LOG(CMF, LogLevel::Verbose, "Pair success");
 
             transition(DriveState::staticClass());
@@ -154,9 +178,15 @@ void PairState::onStationEvent(WiFiStation::EventType type, bool success) noexce
             return;
         }
 
-		if(auto audio = getApp()->getService<Audio>()){
-			audio->play("/spiffs/PairFail.aac");
-		}
+        HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+        if(config == nullptr){
+            return;
+        }
+
+        if(Audio* audio = app->getService<Audio>()){
+            audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/PairFail.aac"));
+        }
+
 		CMF_LOG(CMF, LogLevel::Verbose, "Pair fail");
 
         transition(IntroState::staticClass());

@@ -4,7 +4,7 @@
 #include <Util/StateMachine/State.h>
 
 class NevState : public State {
-	GENERATED_BODY(NevState, State);
+	GENERATED_BODY(NevState, State, void)
 
 public:
 	virtual ~NevState() = default;

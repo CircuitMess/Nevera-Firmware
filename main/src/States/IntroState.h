@@ -5,7 +5,7 @@
 #include <Services/ButtonInput.h>
 
 class IntroState : public NevState {
-	GENERATED_BODY(IntroState, NevState)
+	GENERATED_BODY(IntroState, NevState, void)
 
 public:
 	IntroState() noexcept;

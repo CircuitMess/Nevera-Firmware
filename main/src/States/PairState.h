@@ -7,7 +7,7 @@
 #include "Util/NevState.h"
 
 class PairState : public NevState{
-    GENERATED_BODY(PairState, NevState)
+    GENERATED_BODY(PairState, NevState, void)
 
 public:
     PairState() noexcept;

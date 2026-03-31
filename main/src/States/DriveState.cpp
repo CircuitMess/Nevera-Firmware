@@ -1,4 +1,5 @@
 #include "DriveState.h"
+#include <HardwareConfig.h>
 #include "Enums.h"
 #include "IntroState.h"
 #include <Periphery/WiFi.h>
@@ -6,6 +7,7 @@
 #include <Services/ShutdownService.h>
 #include <Services/TCPClient.h>
 #include <Services/Audio/Audio.h>
+#include <Services/Audio/FileAudioSource.h>
 #include <Services/Motors/Motors.h>
 #include <Services/Motors/Servos.h>
 #include <Services/LED/LED.h>
@@ -98,8 +100,18 @@ void DriveState::onDisconnect() noexcept {
 		return;
 	}
 
-	if(auto audio = getApp()->getService<Audio>()){
-		audio->play("/spiffs/Disconnect.aac");
+	const Application* app = getApp();
+	if(app == nullptr){
+		return;
+	}
+
+	HardwareConfiguration* config = app->getSingleton<HardwareConfiguration>();
+	if(config == nullptr){
+		return;
+	}
+
+	if(auto audio = app->getService<Audio>()){
+		audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/Disconnect.aac"));
 	}
 
 	auto ledService = getApp()->getService<LED<LEDs, RGB_LEDs>>();
@@ -112,7 +124,6 @@ void DriveState::onDisconnect() noexcept {
 }
 
 void DriveState::onSpeedReceived(float value) noexcept {
-	TRACE_LOG("%llu", millis());
 	lastRec = millis();
 
 	const Application* app = getApp();
@@ -129,7 +140,6 @@ void DriveState::onSpeedReceived(float value) noexcept {
 }
 
 void DriveState::onDirectionReceived(float value) noexcept {
-	TRACE_LOG("%llu", millis());
 	lastRec = millis();
 
 	const Application* app = getApp();

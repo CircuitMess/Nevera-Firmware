@@ -4,7 +4,7 @@
 #include "src/Services/WiFiStation.h"
 #include "src/Services/TCPClient.h"
 #include "src/Services/UDPEmitter.h"
-#include <Periphery/I2C.h>
+#include <Periphery/I2CMaster.h>
 #include <Devices/AW9523.h>
 #include <Drivers/Output/OutputCurrAW.h>
 #include "HardwareConfig.h"
@@ -15,7 +15,6 @@
 #include "Services/Motors/Servos.h"
 #include <Services/LED/LED.h>
 #include <Services/Audio/Audio.h>
-#include <Services/Audio/AACSource.h>
 #include <Periphery/GPIOPeriph.h>
 #include <Devices/Camera.h>
 #include <Services/Motors/Motors.h>
@@ -24,20 +23,22 @@
 #include "Enums.h"
 #include <Services/Feed.h>
 #include <Services/ShutdownService.h>
+#include <Services/Audio/FileAudioSource.h>
+#include <Util/stdafx.h>
 #include "States/IntroState.h"
 #include <Util/StateMachine/StateMachine.h>
 #include "Services/Battery.h"
+#include "Util/EfuseMeta.h"
+#include "JigHWTest/JigHWTest.h"
 
 class Nevera : public Application {
-	GENERATED_BODY(Nevera, Application)
+	GENERATED_BODY(Nevera, Application, void)
 
 public:
 	Nevera() noexcept: Super(1000, 4 * 1024, 8, 0){}
 
 protected:
 	virtual void begin() noexcept override {
-		Super::begin();
-
 		auto ret = nvs_flash_init();
 		if(ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND){
 			ESP_ERROR_CHECK(nvs_flash_erase());
@@ -46,8 +47,24 @@ protected:
 		ESP_ERROR_CHECK(ret);
 
 		HardwareConfiguration* config = registerSingleton<HardwareConfiguration>();
-
 		GPIOPeriph* gpio = registerPeriphery<GPIOPeriph>();
+
+		if(JigHWTest::checkJig()){
+			printf("Jig\n");
+			StrongObjectPtr<JigHWTest> test = newObject<JigHWTest>();
+			test->start();
+			vTaskDelete(nullptr);
+		}else{
+			printf("Hello\n");
+		}
+
+		if(!EfuseMeta::check()){
+			while(true){
+				vTaskDelay(1000);
+				EfuseMeta::log();
+			}
+		}
+
 		InputTouchGPIO* touch = registerDriver<InputTouchGPIO>(config->getTouchInputs());
 
 		static const std::vector<std::pair<Enum<int>, InputPin>> ButtonInputs = {
@@ -59,16 +76,15 @@ protected:
 
 		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
 
-		I2C* i2c = registerPeriphery<I2C>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
+		I2CMaster* i2cMaster = registerPeriphery<I2CMaster>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
 
-		AW9523* aw9523 = registerDevice<AW9523>(i2c, config->getAW9523Address());
+		AW9523* aw9523 = registerDevice<AW9523>(i2cMaster, config->getAW9523Address());
 		aw9523->setCurrentLimit(AW9523::IMAX_1Q);
 
 		OutputCurrAW* outputCurrAW = registerService<OutputCurrAW>(config->getAW9523Outputs(), aw9523);
 		for(const auto out: config->getAW9523Outputs()){
 			outputCurrAW->write(out.port, false);
 		}
-
 
 		static const std::vector<std::pair<LEDs, OutputPin>> ledPins = {
 				{ LEDs::HeadlightsLeft,  { outputCurrAW, EXP_HEADLIGHT_L }},
@@ -102,7 +118,7 @@ protected:
 
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
-		auto audio = registerService<Audio>(i2s, newObject<AACSource>().get(), OutputPin{ gpioOut, SPKR_EN });
+		auto audio = registerService<Audio>(i2s, OutputPin{ gpioOut, SPKR_EN });
 		audio->setGain(0.1f);
 
 		auto pwm = registerDriver<OutputPWM>(config->getPwmOutputs());
@@ -115,13 +131,13 @@ protected:
 		auto mcpwm = registerDriver<OutputMCPWM>(config->getMcpwmPinDefs());
 
 		std::vector<ServoDef<ServoEnum>> servoDefs = {
-				{ ServoEnum::Steer, {0.30f, 0.60f}, { mcpwm, 0 }}
+				{ ServoEnum::Steer, {0.30f, 0.55f}, { mcpwm, 0 }}
 		};
 		auto servos = registerService<Servos<ServoEnum>>(servoDefs);
 
-		I2C* camI2C = registerPeriphery<I2C>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
+		I2CMaster* camI2CMaster = registerPeriphery<I2CMaster>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
 
-		auto camera = registerDevice<Camera>(config->getCameraConfig(), camI2C, [](sensor_t* sensor){
+		auto camera = registerDevice<Camera>(config->getCameraConfig(), camI2CMaster, [](sensor_t* sensor){
 			sensor->set_hmirror(sensor, 0);
 			sensor->set_vflip(sensor, 0);
 			sensor->set_gain_ctrl(sensor, 1);
@@ -140,7 +156,7 @@ protected:
 			return;
 		}
 
-		audio->play("/spiffs/Intro2.aac");
+		audio->play(config->getAACAudioGenerator(), std::make_unique<FileAudioSource>("/spiffs/Intro2.aac"));
 
 		registerPeriphery<WiFi>();
 		registerService<WiFiStation>();
@@ -155,13 +171,6 @@ protected:
 		stateMachine->setStartingStateType(IntroState::staticClass());
 	}
 
-	virtual void tick(float deltaTime) noexcept override {
-		Super::tick(deltaTime);
-	}
-
-	virtual void onDestroy() noexcept override {
-		Super::onDestroy();
-	}
 
 private:
 	void onBatteryChange(Battery::Level level) const noexcept{

@@ -6,7 +6,7 @@
 #include <Object/Object.h>
 
 class TCPClient : public Object {
-    GENERATED_BODY(TCPClient, Object)
+    GENERATED_BODY(TCPClient, Object, void)
 
 public:
     DECLARE_EVENT(ConnectEvent, TCPClient);

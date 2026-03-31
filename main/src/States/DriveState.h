@@ -5,7 +5,7 @@
 #include "Services/Feed.h"
 
 class DriveState : public NevState{
-    GENERATED_BODY(DriveState, NevState)
+    GENERATED_BODY(DriveState, NevState, void)
 
 public:
 	DriveState();
