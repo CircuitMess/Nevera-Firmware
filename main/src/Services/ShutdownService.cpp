@@ -52,6 +52,8 @@ void ShutdownService::shutdown(ShutdownReason reason){
 		leds->off((RGB_LEDs) i);
 	}
 
+	leds->forceUpdate();
+
 	delayMillis(1000);
 
 	app->getDriver<OutputGPIO>()->write(SPKR_EN, false);

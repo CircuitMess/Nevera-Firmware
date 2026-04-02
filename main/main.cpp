@@ -148,9 +148,9 @@ protected:
 		registerService<Feed>();
 
 		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
-		battery->begin();
-
 		battery->OnLevelChanged.bind(this, &Nevera::onBatteryChange);
+		battery->begin();
+		onBatteryChange(battery->getLevel());
 
 		if(!SPIFFS::init()){
 			return;
