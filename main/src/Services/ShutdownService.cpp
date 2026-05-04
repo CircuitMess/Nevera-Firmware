@@ -11,14 +11,9 @@
 #include <Services/LED/LED.h>
 #include <Util/stdafx.h>
 
-void ShutdownService::shutdown(ShutdownReason reason){
+void ShutdownService::shutdown(ShutdownReason reason, bool onBoot){
 	const Application* app = getApp();
 	if(app == nullptr){
-		return;
-	}
-
-	Audio* audio = app->getService<Audio>();
-	if(audio == nullptr){
 		return;
 	}
 
@@ -27,32 +22,37 @@ void ShutdownService::shutdown(ShutdownReason reason){
 		return;
 	}
 
-	switch(reason){
-		case ShutdownReason::Inactivity:
-			audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/Gasenje.aac"));
-			break;
-		case ShutdownReason::Battery:
-			audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/GasenjeBatt.aac"));
-			break;
-		default:
-			break;
+	Audio* audio = app->getService<Audio>();
+	if(!onBoot && audio){
+		switch(reason){
+			case ShutdownReason::Inactivity:
+				audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/Gasenje.aac"));
+				break;
+			case ShutdownReason::Battery:
+				audio->play(config->getAACAudioGenerator(),  std::make_unique<FileAudioSource>("/spiffs/GasenjeBatt.aac"));
+				break;
+			default:
+				break;
+		}
 	}
 
 	auto motors = app->getService<Motors<int>>();
-	motors->set(0, 0);
+	if(motors){
+		motors->set(0, 0);
+	}
 
 	auto leds = app->getService<LED<LEDs, RGB_LEDs>>();
+	if(leds){
+		for(int i = 0; i < (uint8_t) LEDs::COUNT; i++){
+			leds->off((LEDs) i);
+		}
 
+		for(int i = 0; i < (uint8_t) RGB_LEDs::COUNT; i++){
+			leds->off((RGB_LEDs) i);
+		}
 
-	for(int i = 0; i < (uint8_t) LEDs::COUNT; i++){
-		leds->off((LEDs) i);
+		leds->forceUpdate();
 	}
-
-	for(int i = 0; i < (uint8_t) RGB_LEDs::COUNT; i++){
-		leds->off((RGB_LEDs) i);
-	}
-
-	leds->forceUpdate();
 
 	delayMillis(1000);
 
