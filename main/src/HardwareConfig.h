@@ -80,7 +80,8 @@ private:
 	const std::vector<OutputPinDef> GPIOOutputs = {
 			{ SPKR_EN, false },
 			{ MOTOR_B, false },
-			{ PIN_VREF, false }
+			{ PIN_VREF, false },
+			{ CAM_PIN_PWDN, false }
 	};
 
 	const std::vector<OutputPWMPinDef> PWMOutputs = {

@@ -57,6 +57,7 @@ void ShutdownService::shutdown(ShutdownReason reason, bool onBoot){
 	delayMillis(1000);
 
 	app->getDriver<OutputGPIO>()->write(SPKR_EN, false);
+	app->getDriver<OutputGPIO>()->write(CAM_PIN_PWDN, true);
 
 
 	ESP_ERROR_CHECK(esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_AUTO));
