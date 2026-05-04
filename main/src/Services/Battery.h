@@ -12,6 +12,15 @@
 #include "../Util/Hysteresis.h"
 #include <Event/EventBroadcaster.h>
 
+class NeveraOffsets_ADCFilter : public ADCFilter {
+	GENERATED_BODY(NeveraOffsets_ADCFilter, ADCFilter, void);
+public:
+	NeveraOffsets_ADCFilter() = default;
+
+	float apply(float sample) override;
+
+};
+
 /**
  * First multiplies the result by given factor, then adds the offset.
  * Useful for converting from voltage divider output to actual source voltage.
@@ -111,12 +120,12 @@ public:
 private:
 
 	static constexpr uint32_t MeasureIntverval = 50;
-	static constexpr float VoltEmpty = 3200;
+	static constexpr float VoltEmpty = 3400;
 
 	static constexpr float VoltFull = 4500;
 	static constexpr float Factor = 4.0f;
 	static constexpr float Offset = 0;
-	static constexpr float EmaA = 0.1f;
+	static constexpr float EmaA = 0.005f;
 	static constexpr int CalReads = 10;
 
 	static constexpr float CalExpected = 2500;
@@ -127,6 +136,7 @@ private:
 	Hysteresis hysteresis;
 	StrongObjectPtr<FactorOffset_ADCFilter> readerBattoffsetFilter;
 
+	StrongObjectPtr<NeveraOffsets_ADCFilter> readerNeveraFilter;
 	StrongObjectPtr<EMA_ADCFilter> readerBattEMAFilter;
 	StrongObjectPtr<ADCReader> readerBatt;
 	StrongObjectPtr<ADCReader> readerRef;
