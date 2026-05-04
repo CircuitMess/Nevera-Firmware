@@ -107,14 +107,18 @@ protected:
 		ledService->reg(ledPins);
 		ledService->reg(rgbleds);
 
-		ledService->on(RGB_LEDs::Left1, { 0.0f, 1.0f, 0.0f });
-		ledService->on(RGB_LEDs::Right1, { 0.0f, 1.0f, 0.0f });
+		for(const auto& led : { RGB_LEDs::Left1, RGB_LEDs::Left2, RGB_LEDs::Left3, RGB_LEDs::Right1, RGB_LEDs::Right2, RGB_LEDs::Right3 }){
+			ledService->off(led);
+		}
 
-		ledService->on(RGB_LEDs::Left2, { 0.0f, 1.0f, 0.0f });
-		ledService->on(RGB_LEDs::Right2, { 0.0f, 1.0f, 0.0f });
+		ledService->on(RGB_LEDs::Left1, { 0.0f, 0.2f, 0.0f });
+		ledService->on(RGB_LEDs::Right1, { 0.0f, 0.2f, 0.0f });
 
-		ledService->on(RGB_LEDs::Left3, { 0.0f, 1.0f, 0.0f });
-		ledService->on(RGB_LEDs::Right3, { 0.0f, 1.0f, 0.0f });
+		ledService->on(RGB_LEDs::Left2, { 0.0f, 0.2f, 0.0f });
+		ledService->on(RGB_LEDs::Right2, { 0.0f, 0.2f, 0.0f });
+
+		ledService->on(RGB_LEDs::Left3, { 0.0f, 0.2f, 0.0f });
+		ledService->on(RGB_LEDs::Right3, { 0.0f, 0.2f, 0.0f });
 
 		auto i2s = registerPeriphery<I2S>(I2S_NUM_AUTO, config->getI2SConfig());
 
