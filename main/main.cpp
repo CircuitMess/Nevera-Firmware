@@ -65,17 +65,6 @@ protected:
 			}
 		}
 
-		InputTouchGPIO* touch = registerDriver<InputTouchGPIO>(config->getTouchInputs());
-
-		static const std::vector<std::pair<Enum<int>, InputPin>> ButtonInputs = {
-			{ Button::Pair, { touch, BTN_PAIR }}
-		};
-
-		ButtonInput* buttonInput = registerService<ButtonInput>();
-		buttonInput->reg(ButtonInputs);
-
-		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
-
 		I2CMaster* i2cMaster = registerPeriphery<I2CMaster>(I2CPort::Zero, static_cast<gpio_num_t>(I2C_SDA), static_cast<gpio_num_t>(I2C_SCL));
 
 		AW9523* aw9523 = registerDevice<AW9523>(i2cMaster, config->getAW9523Address());
@@ -107,9 +96,23 @@ protected:
 		ledService->reg(ledPins);
 		ledService->reg(rgbleds);
 
-		for(const auto& led : { RGB_LEDs::Left1, RGB_LEDs::Left2, RGB_LEDs::Left3, RGB_LEDs::Right1, RGB_LEDs::Right2, RGB_LEDs::Right3 }){
-			ledService->off(led);
+		auto gpioOut = registerDriver<OutputGPIO>(config->getGPIOOutputs(), gpio);
+
+		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
+		if(battery->getLevel() == Battery::Level::Critical){
+			ShutdownService::shutdown(ShutdownReason::Battery, true);
+			for(;;);
 		}
+		battery->OnLevelChanged.bind(this, &Nevera::onBatteryChange);
+
+		InputTouchGPIO* touch = registerDriver<InputTouchGPIO>(config->getTouchInputs());
+
+		static const std::vector<std::pair<Enum<int>, InputPin>> ButtonInputs = {
+			{ Button::Pair, { touch, BTN_PAIR }}
+		};
+
+		ButtonInput* buttonInput = registerService<ButtonInput>();
+		buttonInput->reg(ButtonInputs);
 
 		ledService->on(RGB_LEDs::Left1, { 0.0f, 0.2f, 0.0f });
 		ledService->on(RGB_LEDs::Right1, { 0.0f, 0.2f, 0.0f });
@@ -150,11 +153,6 @@ protected:
 		camera->init();
 
 		registerService<Feed>();
-
-		Battery* battery = registerService<Battery>(OutputPin{ gpioOut, PIN_VREF });
-		battery->OnLevelChanged.bind(this, &Nevera::onBatteryChange);
-		battery->begin();
-		onBatteryChange(battery->getLevel());
 
 		if(!SPIFFS::init()){
 			return;
