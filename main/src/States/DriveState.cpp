@@ -115,10 +115,10 @@ void DriveState::onDisconnect() noexcept {
 	}
 
 	auto ledService = getApp()->getService<LED<LEDs, RGB_LEDs>>();
-	ledService->on(LEDs::HeadlightsLeft, 1.0f);
-	ledService->on(LEDs::HeadlightsRight, 1.0f);
-	ledService->on(LEDs::TaillightsLeft, 1.0f);
-	ledService->on(LEDs::TaillightsRight, 1.0f);
+	ledService->on(LEDs::HeadlightsLeft, 0.0f);
+	ledService->on(LEDs::HeadlightsRight, 0.0f);
+	ledService->on(LEDs::TaillightsLeft, 0.0f);
+	ledService->on(LEDs::TaillightsRight, 0.0f);
 
 	transition(IntroState::staticClass());
 }
