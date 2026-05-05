@@ -120,7 +120,7 @@ public:
 private:
 
 	static constexpr uint32_t MeasureIntverval = 50;
-	static constexpr float VoltEmpty = 3400;
+	static constexpr float VoltEmpty = 3600;
 
 	static constexpr float VoltFull = 4500;
 	static constexpr float Factor = 4.0f;
