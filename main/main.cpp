@@ -145,7 +145,7 @@ protected:
 		I2CMaster* camI2CMaster = registerPeriphery<I2CMaster>(I2CPort::One, static_cast<gpio_num_t>(I2C_CAM_SDA), static_cast<gpio_num_t>(I2C_CAM_SCL));
 
 		auto camera = registerDevice<Camera>(config->getCameraConfig(), camI2CMaster, [](sensor_t* sensor){
-			sensor->set_hmirror(sensor, 0);
+			sensor->set_hmirror(sensor, 1);
 			sensor->set_vflip(sensor, 0);
 			sensor->set_gain_ctrl(sensor, 1);
 		});
