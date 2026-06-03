@@ -108,6 +108,7 @@ void JigHWTest::start(){
 		printf("TEST:passall\n");
 	}else{
 		printf("TEST:fail:%s\n", currentTest);
+		for(;;);
 	}
 
 
@@ -240,7 +241,7 @@ bool JigHWTest::VoltReferenceCheck(){
 	constexpr gpio_num_t RefSwitch = static_cast<gpio_num_t>(PIN_VREF);
 	gpio_set_direction(RefSwitch, GPIO_MODE_OUTPUT);
 	gpio_set_level(RefSwitch, 1);
-	delayMillis(100);
+	delayMillis(200);
 
 	constexpr adc_oneshot_chan_cfg_t cfg = {
 		.atten = ADC_ATTEN_DB_2_5,
@@ -252,7 +253,7 @@ bool JigHWTest::VoltReferenceCheck(){
 
 	const StrongObjectPtr<ADCReader> reader = newObject<ADCReader>(nullptr, (gpio_num_t) PIN_BATT, cfg, true, newObject<FactorOffset_ADCFilter>(nullptr, Factor, Offset).get());
 
-	constexpr uint16_t numReadings = 50;
+	constexpr uint16_t numReadings = 100;
 	constexpr uint16_t readDelay = 10;
 	uint32_t reading = 0;
 

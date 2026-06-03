@@ -50,7 +50,7 @@ private:
 
 	static constexpr int16_t BatVoltageMinimum = 3300;
 	static constexpr float VoltReference = 2500;
-	static constexpr float VoltReferenceTolerance = 100;
+	static constexpr float VoltReferenceTolerance = 150;
 
 	static constexpr uint32_t CheckTimeout = 500;
 
