@@ -32,8 +32,14 @@ protected:
 				servos->set(ServoEnum::Steer, (float) i / (float) Steps);
 				delayMillis(StepDelay);
 			}
+			delayMillis(1000);
 
-			delayMillis(2000);
+			// Sweep right to left slowly (2 seconds).
+			for(uint32_t i = 0; i <= Steps; ++i){
+				servos->set(ServoEnum::Steer, 1.0f - (float) i / (float) Steps);
+				delayMillis(StepDelay);
+			}
+			delayMillis(1000);
 
 			// Center the servo and wait 2 seconds.
 			servos->set(ServoEnum::Steer, 0.5f);
