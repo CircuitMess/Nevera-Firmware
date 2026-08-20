@@ -112,8 +112,6 @@ void Feed::sendFrame(camera_fb_t* frameData){
 	const size_t frameSize = size;
 	const size_t sendSize = frameSize + sizeof(FeedFrame::Header) + sizeof(FeedFrame::Trailer) + sizeof(size_t) * 2;
 
-	//TRACE_LOG("%zu", sendSize);
-
 	if(sendSize > MaxJPEGBufSize){
 		CMF_LOG(Feed, LogLevel::Warning, "Data frame buffer larger than send buffer. %zu > %zu\n", sendSize, MaxJPEGBufSize);
 		camera->releaseFrame();

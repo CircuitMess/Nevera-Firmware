@@ -36,7 +36,7 @@ bool UDPEmitter::write(const uint8_t* buffer, size_t count) noexcept {
 
     size_t total = 0;
     while(total < count){
-        // The std::min needs to be there cause posix is stupid and if you send more than the max possible, it will not send it, but will return like it has sent a successful amount (fucking idiots)
+        // The std::min needs to be there cause posix is dumb and if you send more than the max possible, it will not send it, but will return like it has sent a successful amount
         const int now = ::sendto(socket, buffer + total, std::min(count - total, (size_t)CONFIG_TCP_MSS), 0, reinterpret_cast<sockaddr*>(&dest), sizeof(dest));
 
         if(now == 0){

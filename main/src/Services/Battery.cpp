@@ -113,11 +113,9 @@ void Battery::sample(bool fresh){
 		readerBattEMAFilter->reset();
 		float value = readerBatt->sample();
 		hysteresis.reset(value);
-		//TRACE_LOG("%f", value);
 	}else{
 		float value = readerBatt->sample();
 		hysteresis.update(value);
-		//TRACE_LOG("%f", value);
 	}
 
 
@@ -137,5 +135,5 @@ void Battery::tick() noexcept{
 }
 
 void Battery::begin(){
-	//batThread->start();
+	batThread->start();
 }
